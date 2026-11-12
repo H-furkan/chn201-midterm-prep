@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>中文 CHN201 · Midterm Prep</title>
+  <meta name="description" content="Study site for CHN201 (HSK Standard Course 1, lessons 10–15): vocabulary, grammar, written & oral exam drills and full mock exams." />
+  <meta name="theme-color" content="#c8402f" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script>
+    // Apply theme before paint to avoid a flash.
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem('chn201:settings') || '{}');
+        var t = s.theme || 'auto';
+        var dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        if (s.pinyin === false) document.documentElement.classList.add('hide-pinyin');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#/">
+        <span class="seal" aria-hidden="true">中</span>
+        <span class="brand-text"><strong>CHN201</strong><small>Midterm Prep</small></span>
+      </a>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-foot">
+        <button class="pill-toggle" id="toggle-pinyin" type="button" title="Show/hide pinyin (P)">
+          <span class="dot"></span><span>Pinyin</span>
+        </button>
+        <button class="icon-btn" id="toggle-theme" type="button" title="Toggle theme" aria-label="Toggle theme"></button>
+      </div>
+    </aside>
+    <main id="main" class="main" tabindex="-1">
+      <div id="app" class="app"></div>
+    </main>
+    <nav class="tabbar" id="tabbar" aria-label="Quick navigation"></nav>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.2/dist/hanzi-writer.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

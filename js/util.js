@@ -1,0 +1,242 @@
+// DOM, storage, randomness, speech and pinyin helpers shared by all views.
+
+/** Hyperscript: h('div.card#id', {onclick}, child, [children], 'text') */
+export function h(sel, attrs, ...kids) {
+  if (attrs == null || typeof attrs !== 'object' || attrs instanceof Node || Array.isArray(attrs)) {
+    kids.unshift(attrs);
+    attrs = {};
+  }
+  const [, tag = 'div', rest = ''] = sel.match(/^([a-z0-9-]*)(.*)$/i);
+  const el = document.createElement(tag || 'div');
+  for (const part of rest.match(/[.#][^.#]+/g) || []) {
+    if (part[0] === '.') el.classList.add(part.slice(1));
+    else el.id = part.slice(1);
+  }
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else if (k === 'class') el.className += (el.className ? ' ' : '') + v;
+    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'dataset') Object.assign(el.dataset, v);
+    else if (k in el && k !== 'list' && k !== 'form') el[k] = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  append(el, kids);
+  return el;
+}
+
+function append(el, kids) {
+  for (const k of kids) {
+    if (k == null || k === false) continue;
+    if (Array.isArray(k)) append(el, k);
+    else el.append(k instanceof Node ? k : String(k));
+  }
+}
+
+export const $ = (s, root = document) => root.querySelector(s);
+export const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+
+// ---------- storage ----------
+const PREFIX = 'chn201:';
+export const store = {
+  get(key, fallback) {
+    try {
+      const v = localStorage.getItem(PREFIX + key);
+      return v == null ? fallback : JSON.parse(v);
+    } catch {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(PREFIX + key, JSON.stringify(value));
+    } catch {
+      /* storage full or disabled: progress just won't persist */
+    }
+  },
+  update(key, fallback, fn) {
+    const next = fn(store.get(key, fallback));
+    store.set(key, next);
+    return next;
+  },
+};
+
+export function settings() {
+  return { theme: 'auto', pinyin: true, rate: 0.85, lessons: ['R', '10', '11', '12', '13', '14', '15', 'X'], examDate: '', ...store.get('settings', {}) };
+}
+export function saveSettings(patch) {
+  const s = { ...settings(), ...patch };
+  store.set('settings', s);
+  return s;
+}
+
+/** Record a practice result: kind = 'p1'..'p9', 'oral1'.. ; score/max */
+export function logResult(kind, score, max) {
+  store.update('results', [], (arr) => {
+    arr.push({ kind, score, max, t: Date.now() });
+    return arr.slice(-400);
+  });
+}
+
+// ---------- random ----------
+export function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+export const sample = (arr, n) => shuffle(arr).slice(0, n);
+export const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+export const LETTERS = 'ABCDEFGHIJKLMNOP';
+
+// ---------- text ----------
+/** Strip punctuation/whitespace for answer comparison. */
+export function norm(s) {
+  return String(s || '')
+    .replace(/[\s，。？！、：；“”‘’"'（）()…,.?!:;·\-—~～]/g, '')
+    .toLowerCase();
+}
+export const hasHanzi = (s) => /[\u4e00-\u9fff]/.test(s || '');
+export const countHanzi = (s) => (String(s || '').match(/[\u4e00-\u9fff]/g) || []).length;
+
+/** Pinyin + hanzi + english block, respecting the global pinyin toggle. */
+export function zh(h1, p, e, { speak: withSpeak = false, big = false, keepPinyin = false } = {}) {
+  const line = h('span.zh-line', h('span.h', { lang: 'zh-CN', style: big ? { fontSize: '1.5em' } : null }, h1), p ? h(`span.p${keepPinyin ? '.keep' : ''}`, p) : null, e ? h('span.e', e) : null);
+  if (!withSpeak) return line;
+  return h('div.row', { style: { flexWrap: 'nowrap', alignItems: 'flex-start' } }, speakBtn(h1), line);
+}
+
+// ---------- speech ----------
+let zhVoice = null;
+let voicesLoaded = false;
+function loadVoices() {
+  if (!('speechSynthesis' in window)) return;
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) return;
+  voicesLoaded = true;
+  const zhs = voices.filter((v) => /^zh(-|_)?(CN|Hans)?/i.test(v.lang) && !/HK|TW|yue/i.test(v.lang));
+  const pref = ['Tingting', 'Ting-Ting', 'Google 普通话', 'Xiaoxiao', 'Yunxi', 'Lili', 'Meijia'];
+  zhVoice = pref.map((n) => zhs.find((v) => v.name.includes(n))).find(Boolean) || zhs[0] || voices.find((v) => /^zh/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window) {
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+export const canSpeak = () => 'speechSynthesis' in window;
+export const hasZhVoice = () => !!zhVoice || !voicesLoaded;
+
+let current = null;
+/** Speak Chinese text. Resolves when finished. */
+export function speak(text, { rate, onend } = {}) {
+  if (!canSpeak()) {
+    toast('Speech is not supported in this browser');
+    return Promise.resolve();
+  }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(String(text).replace(/___+/g, '什么'));
+  u.lang = 'zh-CN';
+  if (zhVoice) u.voice = zhVoice;
+  u.rate = rate ?? settings().rate;
+  current = u;
+  return new Promise((resolve) => {
+    const done = () => {
+      if (current === u) current = null;
+      onend?.();
+      resolve();
+    };
+    u.onend = done;
+    u.onerror = done;
+    speechSynthesis.speak(u);
+  });
+}
+export function stopSpeaking() {
+  if (canSpeak()) speechSynthesis.cancel();
+}
+
+export function speakBtn(text, label = 'Listen') {
+  const b = h('button.speak', { type: 'button', title: label, 'aria-label': `${label}: ${text}` }, '▶');
+  b.addEventListener('click', async (ev) => {
+    ev.stopPropagation();
+    b.classList.add('playing');
+    await speak(text);
+    b.classList.remove('playing');
+  });
+  return b;
+}
+
+// ---------- toast ----------
+let toastTimer;
+export function toast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ---------- pinyin ----------
+const TONES = {
+  a: 'āáǎàa', e: 'ēéěèe', i: 'īíǐìi', o: 'ōóǒòo', u: 'ūúǔùu', ü: 'ǖǘǚǜü',
+};
+const MARKED = {};
+for (const [base, row] of Object.entries(TONES)) {
+  for (let t = 0; t < 4; t++) MARKED[row[t]] = [base, t + 1];
+}
+
+/** Return the pinyin with the tone of syllable-vowel #idx changed to `tone` (1-4, 5 = neutral). */
+function retone(p, idx, tone) {
+  let n = -1;
+  return [...p]
+    .map((ch) => {
+      const m = MARKED[ch.toLowerCase()];
+      if (!m) return ch;
+      n++;
+      if (n !== idx) return ch;
+      const out = TONES[m[0]][tone - 1];
+      return ch === ch.toUpperCase() && ch !== ch.toLowerCase() ? out.toUpperCase() : out;
+    })
+    .join('');
+}
+
+/** Plausible wrong pinyin: same syllables, different tones. */
+export function toneVariants(p, n = 3) {
+  const marks = [...p].filter((ch) => MARKED[ch.toLowerCase()]);
+  const out = new Set();
+  let guard = 0;
+  while (out.size < n && guard++ < 60 && marks.length) {
+    let v = p;
+    const changes = 1 + (marks.length > 1 && Math.random() < 0.5 ? 1 : 0);
+    for (let c = 0; c < changes; c++) {
+      const idx = Math.floor(Math.random() * marks.length);
+      const cur = MARKED[[...v].filter((ch) => MARKED[ch.toLowerCase()])[idx]?.toLowerCase()]?.[1];
+      let t;
+      do t = 1 + Math.floor(Math.random() * 4);
+      while (t === cur);
+      v = retone(v, idx, t);
+    }
+    if (v !== p) out.add(v);
+  }
+  return [...out];
+}
+
+/** Count syllables in a pinyin/hanzi mixed text (composition "word" count). */
+export function compositionStats(text) {
+  const hanzi = countHanzi(text);
+  const latin = String(text || '')
+    .replace(/[\u4e00-\u9fff]/g, ' ')
+    .match(/[a-zA-ZāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüĀÁǍÀĒÉĚÈĪÍǏÌŌÓǑÒŪÚǓÙ']+/g) || [];
+  // A pinyin "word" like "xuésheng" counts as its syllables (vowel groups).
+  const sylls = latin.reduce((n, w) => n + Math.max(1, (w.match(/[aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]+/gi) || []).length), 0);
+  const total = hanzi + sylls;
+  return { hanzi, sylls, total, pct: total ? Math.round((hanzi / total) * 100) : 0 };
+}
+
+export function fmtTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
