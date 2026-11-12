@@ -1,30 +1,14 @@
 // Reusable UI pieces.
 import { h, LETTERS } from './util.js';
 
-/** Hanzi set in 田字格 practice cells. size: 'sm' | 'md' | 'lg' | 'xl' or a pixel number. */
-export function tz(text, size = 'md') {
-  const px = typeof size === 'number';
-  return h(`span.tz${px ? '' : '.' + size}`, { lang: 'zh-CN', 'aria-label': text, style: px ? { '--s': `${size}px` } : null },
-    [...text].map((c) => h('span.tz-cell', { 'aria-hidden': 'true', style: px ? { '--s': `${size}px` } : null }, c)));
-}
-
-/** Page header: the page's Chinese name in 田字格 cells, then the English title. */
-export function pageHead(zhName, title, desc, crumbs) {
+export function pageHead(eyebrow, title, desc, crumbs) {
   return h(
     'header.page-head',
     crumbs ? h('div.crumbs', crumbs.map(([label, href], i) => [i ? ' / ' : '', href ? h('a', { href }, label) : label])) : null,
-    zhName ? h('div.ph-zh', tz(zhName, 'md')) : null,
+    eyebrow ? h('div.eyebrow', eyebrow) : null,
     h('h1', title),
     desc ? h('p', desc) : null,
   );
-}
-
-/** Exam-paper style index: 一、选词填空 / English / points. rows: [{ n, zh, en, pts, href }] */
-export function paperIndex(rows) {
-  return h('ul.paper-index', rows.map((r) => {
-    const body = [h('span.pi-n', `${r.n}、`), h('span', h('span.pi-zh', { lang: 'zh-CN' }, r.zh), h('span.pi-en', r.en)), h('span.pi-pts', r.pts ?? '')];
-    return h('li', r.href ? h('a', { href: r.href }, body) : h('a', { style: { cursor: 'default' } }, body));
-  }));
 }
 
 export function bar(pct, cls = '') {
@@ -200,17 +184,10 @@ export function gridSvg(size) {
   ];
   for (const [x1, y1, x2, y2] of lines) {
     const l = document.createElementNS(ns, 'line');
-    Object.entries({ x1, y1, x2, y2, stroke: 'var(--rule-2)', 'stroke-dasharray': '4 4', 'stroke-width': 1 }).forEach(([k, v]) => l.setAttribute(k, v));
+    Object.entries({ x1, y1, x2, y2, stroke: 'var(--line)', 'stroke-dasharray': '4 4', 'stroke-width': 1 }).forEach(([k, v]) => l.setAttribute(k, v));
     svg.append(l);
   }
   return svg;
-}
-
-/** HanziWriter colours from the current theme (ink strokes, blue pen for your drawing). */
-export function writerColors() {
-  const css = getComputedStyle(document.documentElement);
-  const v = (n) => css.getPropertyValue(n).trim();
-  return { strokeColor: v('--ink'), outlineColor: v('--rule'), drawingColor: v('--pen'), highlightColor: v('--jade'), radicalColor: null };
 }
 
 /** Inline HanziWriter quiz for a string of characters. */
@@ -224,6 +201,7 @@ export function writePad(text, { size = 200 } = {}) {
     status.textContent = 'Handwriting needs an internet connection (loading the stroke data library).';
     return wrap;
   }
+  const dark = document.documentElement.dataset.theme === 'dark';
   chars.forEach((ch) => {
     const box = h('div.hw-target', { style: { width: `${size}px`, height: `${size}px` } });
     box.append(gridSvg(size));
@@ -232,7 +210,8 @@ export function writePad(text, { size = 200 } = {}) {
     pads.append(box);
     const w = window.HanziWriter.create(target, ch, {
       width: size, height: size, padding: 12, showCharacter: false, showOutline: true,
-      ...writerColors(), drawingWidth: 22,
+      strokeColor: dark ? '#f2ece2' : '#1d1a16', outlineColor: dark ? '#352e27' : '#e6ded1',
+      drawingColor: dark ? '#ec6a55' : '#c8402f', highlightColor: '#23806a', drawingWidth: 22,
       onLoadCharDataError: () => { status.textContent = `Could not load stroke data for ${ch}.`; },
     });
     w.quiz({

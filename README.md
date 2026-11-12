@@ -40,8 +40,6 @@ All content is in `data/`:
 - `oral.js`: oral parts 1–3, including the Q&A sheet
 - `composition.js`: composition topics, models and tips
 
-The design follows a Chinese exercise book: Hanzi in Kaiti (LXGW WenKai) inside 田字格 grids, blue pen for your answers, red pen for marking, and a blackboard dark mode.
-
 Audio is pre-recorded with a natural Mandarin neural voice (`zh-CN-XiaoxiaoNeural` via edge-tts) and stored in `audio/`. Anything without a recording falls back to the browser's voice. After editing content, regenerate the audio: run `bun tools/collect_strings.js`, then `python3 tools/gen_audio.py` (needs `pip install edge-tts`). Existing files are skipped. Handwriting uses [Hanzi Writer](https://hanziwriter.org) (MIT).
 
 *These are practice materials made by students. They are not the real exam.*

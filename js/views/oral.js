@@ -13,12 +13,12 @@ export function render(root, { args }) {
 
 function hub(root) {
   const tiles = [
-    ['1', '说', 'Part 1: Say it in Chinese', `English word or sentence → say the Chinese. ${PART1.length} prompts, including the 5 from the sample.`],
-    ['2', '听', 'Part 2: Listen and answer', `The examiner reads a question once; you answer. All 32 Q&As from the sheet + ${PART2.filter((x) => x.src !== 'sheet').length} extra.`],
-    ['3', '讲', 'Part 3: Topic talk', 'One of two topics at random: “My day” or “Me 10 years ago, now and in 10 years”.'],
+    ['1', '说', 'Part 1 · Say it in Chinese', `English word or sentence → say the Chinese. ${PART1.length} prompts, including the 5 from the sample.`],
+    ['2', '听', 'Part 2 · Listen & answer', `The examiner reads a question once; you answer. All 32 Q&As from the sheet + ${PART2.filter((x) => x.src !== 'sheet').length} extra.`],
+    ['3', '讲', 'Part 3 · Topic talk', 'One of two topics at random: “My day” or “Me 10 years ago, now and in 10 years”.'],
   ];
   root.append(
-    pageHead('口试', 'Oral exam', 'Use headphones and speak every answer aloud — the site reads questions with a Mandarin voice, and you can record yourself to compare with the model.'),
+    pageHead('Oral exam · 口试', 'Practise speaking out loud', 'Use headphones and speak every answer aloud — the site reads questions with a Mandarin voice, and you can record yourself to compare with the model.'),
     h('div.grid.g3', tiles.map(([k, c, t, d]) => h('a.tile', { href: `#/oral/${k}` }, h('span.tc', c), h('span.tt', t), h('span.td', d)))),
     h('div.card', { style: { marginTop: '18px' } },
       h('h3', 'Tips for the oral exam'),
@@ -64,7 +64,7 @@ function part1(root) {
       speak(it.h);
       actions.replaceChildren(
         speakBtn(it.h),
-        h('button.btn.danger', { type: 'button', onclick: () => { deck.push(it); i++; draw(); } }, '✗ Missed'),
+        h('button.btn', { type: 'button', style: { borderColor: 'var(--bad)', color: 'var(--bad)' }, onclick: () => { deck.push(it); i++; draw(); } }, '✗ Missed'),
         h('button.btn.jade', { type: 'button', onclick: () => { right++; i++; draw(); } }, '✓ I said it'),
       );
     };
@@ -84,7 +84,7 @@ function part1(root) {
   }
 
   root.append(
-    pageHead(null, 'Part 1: Say it in Chinese', 'You see an English word or sentence — say it in Chinese out loud, then reveal and compare. Mark yourself honestly; missed prompts come back at the end.', [['Oral', '#/oral'], ['Part 1']]),
+    pageHead('Oral Part 1', 'Say it in Chinese', 'You see an English word or sentence — say it in Chinese out loud, then reveal and compare. Mark yourself honestly; missed prompts come back at the end.', [['Oral', '#/oral'], ['Part 1']]),
     h('div.toolbar', sizeSel, h('span.spacer'), canRecognize() ? h('span.small.muted', 'Voice check works best in Chrome') : null),
     h('div', { style: { maxWidth: '640px', margin: '0 auto' } }, prog, h('div', { style: { marginTop: '12px' } }, stage)),
   );
@@ -177,10 +177,10 @@ function part2(root) {
         if (an) shown.append(h('div.bubble.B', h('span.who', 'B'), speakBtn(an.h), zh(an.h, an.p, an.e)));
         pi++;
         if (pi < pairs.length) {
-          ctrl.replaceChildren(h('button.btn.primary', { type: 'button', onclick: askCurrent }, 'Next question'));
+          ctrl.replaceChildren(h('button.btn.primary', { type: 'button', onclick: askCurrent }, 'Next question in this dialogue →'));
         } else {
           ctrl.replaceChildren(
-            h('button.btn.danger', { type: 'button', onclick: () => { i++; step(); } }, '✗ Need practice'),
+            h('button.btn', { type: 'button', style: { borderColor: 'var(--bad)', color: 'var(--bad)' }, onclick: () => { i++; step(); } }, '✗ Need practice'),
             h('button.btn.jade', { type: 'button', onclick: () => { right++; i++; step(); } }, '✓ Answered well'),
           );
         }
@@ -208,7 +208,7 @@ function part2(root) {
   }
 
   root.append(
-    pageHead(null, 'Part 2: Listen and answer', 'In the exam the teacher reads each question once and you answer immediately. Simulate it here: listen without text, answer aloud, then reveal the model answer.', [['Oral', '#/oral'], ['Part 2']]),
+    pageHead('Oral Part 2', 'Listen & answer', 'In the exam the teacher reads each question once and you answer immediately. Simulate it here: listen without text, answer aloud, then reveal the model answer.', [['Oral', '#/oral'], ['Part 2']]),
     h('div.toolbar', tabs),
     body,
   );
@@ -270,7 +270,7 @@ function part3(root) {
   }
 
   root.append(
-    pageHead(null, 'Part 3: Topic talk', 'You get one of these two topics at random. Prepare both: learn the frames, memorise a model, then practise with the timer.', [['Oral', '#/oral'], ['Part 3']]),
+    pageHead('Oral Part 3', 'Topic talk', 'You get one of these two topics at random. Prepare both: learn the frames, memorise a model, then practise with the timer.', [['Oral', '#/oral'], ['Part 3']]),
     h('div.toolbar', tabs),
     body,
   );

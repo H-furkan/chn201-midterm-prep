@@ -2,7 +2,7 @@
 // { el, check(), result() -> { score, max, pending } } so the same parts power
 // the per-part drills and the full mock exam.
 import { h, shuffle, sample, LETTERS, norm, hasHanzi, speakBtn, zh } from './util.js';
-import { feedback, selfGrade, writePad, dropBoard, tz } from './components.js';
+import { feedback, selfGrade, writePad, dropBoard } from './components.js';
 import { VOCAB } from '../data/vocab.js';
 import { FILL, REORDER, MATCH, READING, ANSWER, PICTURE, CHARS } from '../data/written.js';
 
@@ -47,7 +47,7 @@ export function makePart1({ items, options }, { onChange } = {}) {
   board.bank.classList.add('latin');
   const rows = items.map((w, i) => {
     const fb = h('div');
-    const row = qRow(i, h('div.p1-row', tz(w.h, 'md'), board.slots[i]), fb);
+    const row = qRow(i, h('div.p1-row', h('span.hz-big', { lang: 'zh-CN' }, w.h), board.slots[i]), fb);
     return { row, fb, w };
   });
   return {
@@ -309,7 +309,7 @@ export function makePart8(items, { onChange } = {}) {
     const input = h('input.input', { type: 'text', lang: 'zh-CN', placeholder: '汉字', autocomplete: 'off', style: { width: '110px', display: 'inline-block', padding: '6px 10px', fontSize: '1.2rem', textAlign: 'center' }, oninput: () => onChange?.() });
     const m = it.s.match(/^(.*?)[（(]\s*([^）)]+?)\s*[）)](.*)$/);
     const sentence = m
-      ? h('span.zh-line', h('span.h', { lang: 'zh-CN' }, m[1], h('span', { style: { color: 'var(--red)', fontFamily: 'var(--font-ui)', fontSize: '.85em', margin: '0 4px' } }, `（${m[2]}）`), m[3]))
+      ? h('span.zh-line', h('span.h', { lang: 'zh-CN' }, m[1], h('span', { style: { color: 'var(--accent)', fontFamily: 'var(--font-ui)', fontSize: '.9em', margin: '0 4px' } }, `（${m[2]}）`), m[3]))
       : h('span.zh-line', h('span.h', it.s));
     const fb = h('div');
     const padSlot = h('div');

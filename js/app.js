@@ -66,7 +66,7 @@ async function route() {
   try {
     const mod = await load();
     if (id !== renderId) return;
-    const root = h('div');
+    const root = h('div.fade-in');
     app.replaceChildren(root);
     cleanup = (await mod.render(root, { args: m.slice(1), params, path })) || null;
     $('#main').focus({ preventScroll: true });

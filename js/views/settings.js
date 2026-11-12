@@ -32,7 +32,7 @@ export function render(root) {
   }
 
   root.append(
-    pageHead('设置', 'Settings', 'Everything is stored only in this browser (no account). Export your progress to move it to another device.'),
+    pageHead('Settings · 设置', 'Settings & your data', 'Everything is stored only in this browser (no account). Export your progress to move it to another device.'),
     h('div.grid.g2', { style: { alignItems: 'start' } },
       h('div.card.stack',
         h('h3', 'Display'),
@@ -52,7 +52,7 @@ export function render(root) {
         h('h3', 'Progress data'),
         h('p.small.muted', `${KEYS().length} saved items (flashcard levels, drill scores, mock history, drafts).`),
         h('div.row', h('button.btn', { type: 'button', onclick: exportData }, '⬇ Export progress'), h('button.btn', { type: 'button', onclick: () => file.click() }, '⬆ Import progress'), file),
-        h('button.btn.danger', { type: 'button', onclick: () => { if (confirm('Delete ALL progress on this device?')) { KEYS().forEach((k) => localStorage.removeItem(k)); location.reload(); } } }, 'Reset all progress'),
+        h('button.btn', { type: 'button', style: { borderColor: 'var(--bad)', color: 'var(--bad)' }, onclick: () => { if (confirm('Delete ALL progress on this device?')) { KEYS().forEach((k) => localStorage.removeItem(k)); location.reload(); } } }, 'Reset all progress'),
         h('hr.hr'),
         h('h3', 'About'),
         h('p.small', 'Built for the CHN201 midterm (METU Modern Languages) from the class slides, Wordwall flashcards, the sample midterm and the oral Q&A sheet. All exercises are generated for practice — they are not the real exam.'),
