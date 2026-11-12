@@ -1,20 +1,15 @@
 import { h, $, settings, saveSettings, stopSpeaking, toast } from './util.js';
 
 const NAV = [
-  { section: 'Learn' },
   { path: '/', icon: '首', label: 'Home', tab: true },
   { path: '/vocab', icon: '词', label: 'Vocabulary', tab: true, tabLabel: 'Words' },
   { path: '/flashcards', icon: '卡', label: 'Flashcards' },
   { path: '/grammar', icon: '法', label: 'Grammar' },
   { path: '/write', icon: '写', label: 'Handwriting' },
-  { section: 'Written exam' },
-  { path: '/written', icon: '笔', label: 'Written drills', tab: true, tabLabel: 'Written' },
-  { path: '/written/9', icon: '文', label: 'Composition' },
-  { section: 'Oral exam' },
-  { path: '/oral', icon: '说', label: 'Oral practice', tab: true, tabLabel: 'Oral' },
-  { section: 'Test yourself' },
+  { path: '/written', icon: '笔', label: 'Written exam', tab: true, tabLabel: 'Written' },
+  { path: '/oral', icon: '说', label: 'Oral exam', tab: true, tabLabel: 'Oral' },
   { path: '/mock', icon: '考', label: 'Mock exam', tab: true, tabLabel: 'Mock' },
-  { path: '/settings', icon: '设', label: 'Settings & data' },
+  { path: '/settings', icon: '设', label: 'Settings' },
 ];
 
 const ROUTES = [
@@ -33,10 +28,6 @@ function buildNav() {
   const nav = $('#nav');
   const tab = $('#tabbar');
   for (const item of NAV) {
-    if (item.section) {
-      nav.append(h('div.nav-section', item.section));
-      continue;
-    }
     nav.append(h('a', { href: `#${item.path}`, dataset: { path: item.path } }, h('span.ni', item.icon), item.label));
     if (item.tab) tab.append(h('a', { href: `#${item.path}`, dataset: { path: item.path } }, h('span.ti', item.icon), item.tabLabel || item.label));
   }

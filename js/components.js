@@ -1,6 +1,5 @@
 // Reusable UI pieces.
-import { h, settings, saveSettings } from './util.js';
-import { LESSONS } from '../data/vocab.js';
+import { h } from './util.js';
 
 export function pageHead(eyebrow, title, desc, crumbs) {
   return h(
@@ -10,43 +9,6 @@ export function pageHead(eyebrow, title, desc, crumbs) {
     h('h1', title),
     desc ? h('p', desc) : null,
   );
-}
-
-/** Lesson filter chips bound to settings.lessons. Calls onChange(selectedIds). */
-export function lessonChips(onChange, { ids = LESSONS.map((l) => l.id) } = {}) {
-  const wrap = h('div.chips', { role: 'group', 'aria-label': 'Lessons' });
-  const draw = () => {
-    const sel = new Set(settings().lessons);
-    wrap.replaceChildren(
-      h('button.chip', { type: 'button', onclick: () => set(ids.every((i) => sel.has(i)) ? [] : ids) }, ids.every((i) => sel.has(i)) ? 'None' : 'All'),
-      ...LESSONS.filter((l) => ids.includes(l.id)).map((l) =>
-        h(
-          `button.chip${sel.has(l.id) ? '.on' : ''}`,
-          { type: 'button', title: `${l.title} — ${l.en}`, 'aria-pressed': String(sel.has(l.id)), onclick: () => set(sel.has(l.id) ? [...sel].filter((x) => x !== l.id) : [...sel, l.id]) },
-          h('span.sw', { style: { background: `var(--${l.color})` } }),
-          l.short,
-        ),
-      ),
-    );
-  };
-  const set = (arr) => {
-    saveSettings({ lessons: arr });
-    draw();
-    onChange?.(arr);
-  };
-  draw();
-  return wrap;
-}
-
-/** Filter a pool by the selected lessons; fall back to the whole pool if the filter leaves fewer than `min`. */
-export function byLessons(pool, min = 1) {
-  const sel = new Set(settings().lessons);
-  const f = pool.filter((x) => sel.has(String(x.l)));
-  return f.length >= min ? f : pool;
-}
-
-export function ring(pct, label, color = 'var(--accent)') {
-  return h('div.ring', { style: { '--v': Math.round(pct), '--c': color } }, h('span', label ?? `${Math.round(pct)}%`));
 }
 
 export function bar(pct, cls = '') {

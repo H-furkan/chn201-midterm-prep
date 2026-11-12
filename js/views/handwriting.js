@@ -1,5 +1,5 @@
-import { h, settings, speakBtn, zh } from '../util.js';
-import { pageHead, lessonChips, gridSvg } from '../components.js';
+import { h, speakBtn, zh } from '../util.js';
+import { pageHead, gridSvg } from '../components.js';
 import { VOCAB } from '../../data/vocab.js';
 
 const SIZE = 280;
@@ -16,9 +16,8 @@ export function render(root) {
   const testBtn = h('button.chip', { type: 'button', onclick: () => { modeTest = !modeTest; testBtn.classList.toggle('on', modeTest); show(cur); } }, '🙈 Test mode (no outline)');
 
   function collect() {
-    const sel = new Set(settings().lessons);
     const seen = new Map();
-    for (const w of VOCAB.filter((x) => sel.has(x.l))) {
+    for (const w of VOCAB) {
       for (const c of w.h) {
         if (!/[\u4e00-\u9fff]/.test(c)) continue;
         if (!seen.has(c)) seen.set(c, []);
@@ -36,7 +35,7 @@ export function render(root) {
 
   function show(x) {
     if (!x) {
-      boxHolder.replaceChildren(h('div.empty', 'Select some lessons.'));
+      boxHolder.replaceChildren(h('div.empty', 'No characters.'));
       return;
     }
     cur = x;
@@ -81,7 +80,6 @@ export function render(root) {
 
   root.append(
     pageHead('Handwriting · 写汉字', 'Write characters stroke by stroke', 'Part 8 of the exam asks you to WRITE characters by hand, and Hanzi in your composition earns bonus points. Draw on the grid with your finger or mouse — wrong strokes are rejected so you learn correct stroke order.'),
-    h('div.toolbar', lessonChips(drawList)),
     h('div.grid.g2', { style: { alignItems: 'start' } },
       h('div.card.stack',
         boxHolder,
@@ -96,7 +94,7 @@ export function render(root) {
       ),
       h('div.card', info),
     ),
-    h('div.card', { style: { marginTop: '16px' } }, h('h3', 'Characters in selected lessons'), list),
+    h('div.card', { style: { marginTop: '16px' } }, h('h3', 'All exam characters'), list),
   );
   // HanziWriter loads with `defer`; wait for it if needed.
   if (window.HanziWriter || document.readyState === 'complete') drawList();

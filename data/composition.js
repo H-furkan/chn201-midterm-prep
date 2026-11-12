@@ -323,7 +323,7 @@ export const COMPOSITION_TIPS = [
   "Bonus: writing at least 20% in Hanzi earns up to +2 points. Always write the easy ones in characters: 我、你、他、她、是、有、在、的、了、很、不、人、家、大学、中国、中文、今天、明天、一、二、三.",
   "If you don't know a character, write that word in pinyin WITH tone marks (e.g. 我住在 sùshè) — never leave a gap, and never switch to an English word.",
   "Use a fixed structure: 1 opening sentence (name / topic), 3–4 middle blocks (who/what, when, where, how), 1 closing feeling (我很喜欢… / 我很爱…！).",
-  "Show off lessons 10–15 in every essay: one location sentence (在…上面/里面), one time sentence (早上七点前起床), one 太…了, one 在…呢, one 了 sentence, one 是…的, one 会/可能会/一定会.",
+  "Show off the exam grammar in every essay: one location sentence (在…上面/里面), one time sentence (早上七点前起床), one 太…了, one 在…呢, one 了 sentence, one 是…的, one 会/可能会/一定会.",
   "Time and place go BEFORE the verb: 我每天早上七点在宿舍吃饭. Never put the time at the end like English.",
   "了 check: completed action with a quantity → 买了三本书 / 吃了很多菜; new situation → 我去商店买东西了. Negative past = 没 + verb with NO 了 (我没买). Don't add 了 to habits (我每天七点起床).",
   "的 check: 我的朋友, 学校的宿舍, 是…的 (我是坐飞机来的). Family words can drop it: 我爸爸, 我妈妈. Ages and adjectives take no 是: 我二十岁, 她很漂亮.",

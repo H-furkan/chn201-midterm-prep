@@ -101,7 +101,6 @@ kbd {
 .brand-text strong { font-size: 1.05rem; letter-spacing: .02em; }
 .brand-text small { color: var(--muted); font-size: .8rem; }
 .nav { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
-.nav-section { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 14px 10px 4px; }
 .nav a {
   display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; text-decoration: none;
   color: var(--ink-2); font-weight: 500; transition: background .15s, color .15s;
@@ -200,7 +199,6 @@ kbd {
 }
 .chip:hover { border-color: var(--muted); }
 .chip.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-.chip .sw { width: 9px; height: 9px; border-radius: 50%; }
 .tag {
   display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .03em;
   background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line);
@@ -237,9 +235,6 @@ textarea.input { min-height: 110px; resize: vertical; font-family: var(--font-zh
 .bar { height: 8px; border-radius: 99px; background: var(--bg-2); overflow: hidden; }
 .bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--gold)); border-radius: inherit; transition: width .5s var(--ease); }
 .bar.jade > span { background: var(--jade); }
-.ring { --v: 0; --c: var(--accent); width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; flex: none;
-  background: conic-gradient(var(--c) calc(var(--v) * 1%), var(--bg-2) 0); }
-.ring > span { width: 60px; height: 60px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-weight: 800; font-size: .95rem; }
 
 /* Toast */
 .toast {
@@ -266,9 +261,6 @@ textarea.input { min-height: 110px; resize: vertical; font-family: var(--font-zh
 .hero .btn.outline { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .5); }
 .countdown { display: inline-flex; align-items: baseline; gap: 8px; padding: 8px 14px; border-radius: 12px; background: rgba(0, 0, 0, .18); margin-top: 6px; }
 .countdown b { font-size: 1.6rem; }
-.stat { display: flex; gap: 14px; align-items: center; }
-.stat .label { font-size: .8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
-.stat .val { font-size: 1.35rem; font-weight: 800; }
 .format-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 .format-table td { padding: 9px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .format-table tr:last-child td { border-bottom: 0; }
@@ -276,11 +268,6 @@ textarea.input { min-height: 110px; resize: vertical; font-family: var(--font-zh
 .format-table a { text-decoration: none; font-weight: 600; }
 .format-table a:hover { color: var(--accent); }
 .format-table .num { font-family: var(--font-zh-serif); font-weight: 700; color: var(--accent); width: 28px; }
-.plan-day { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
-.plan-day:last-child { border-bottom: 0; }
-.plan-day .d { width: 54px; flex: none; font-weight: 800; color: var(--accent); }
-.plan-day.done .d { color: var(--jade); }
-.plan-day label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
 
 .tile {
   display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: var(--radius); background: var(--surface);
@@ -312,10 +299,6 @@ textarea.input { min-height: 110px; resize: vertical; font-family: var(--font-zh
 .vcard .lvl i { width: 5px; height: 12px; border-radius: 2px; background: var(--line); }
 .vcard .lvl i.on { background: var(--jade); }
 .hide-pinyin .vcard .vp { display: none; }
-.vtable { width: 100%; border-collapse: collapse; }
-.vtable td, .vtable th { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: left; }
-.vtable th { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.vtable .hz { font-size: 1.25rem; }
 
 /* Flashcards */
 .fc-wrap { max-width: 560px; margin: 0 auto; }

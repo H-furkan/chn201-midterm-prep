@@ -1,5 +1,5 @@
 import { h, zh, speak, speakSequence, speakBtn, shuffle, norm, logResult, fmtTime, settings, store, stopSpeaking } from '../util.js';
-import { pageHead, lessonChips, byLessons, bar, feedback } from '../components.js';
+import { pageHead, bar, feedback } from '../components.js';
 import { recorder, recognizeOnce, canRecognize } from '../media.js';
 import { PART1, PART2, PART3 } from '../../data/oral.js';
 
@@ -42,7 +42,7 @@ function part1(root) {
   const sizeSel = h('select.select', { onchange: start }, [5, 10, 20, 40].map((n) => h('option', { value: n, selected: n === 10 }, `${n} prompts${n === 5 ? ' (exam length)' : ''}`)));
 
   function start() {
-    deck = shuffle(byLessons(PART1, 5)).slice(0, Number(sizeSel.value));
+    deck = shuffle(PART1).slice(0, Number(sizeSel.value));
     i = 0;
     right = 0;
     draw();
@@ -86,7 +86,6 @@ function part1(root) {
   root.append(
     pageHead('Oral Part 1', 'Say it in Chinese', 'You see an English word or sentence — say it in Chinese out loud, then reveal and compare. Mark yourself honestly; missed prompts come back at the end.', [['Oral', '#/oral'], ['Part 1']]),
     h('div.toolbar', sizeSel, h('span.spacer'), canRecognize() ? h('span.small.muted', 'Voice check works best in Chrome') : null),
-    h('div.toolbar', lessonChips(start)),
     h('div', { style: { maxWidth: '640px', margin: '0 auto' } }, prog, h('div', { style: { marginTop: '12px' } }, stage)),
   );
   start();

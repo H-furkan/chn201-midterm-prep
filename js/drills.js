@@ -2,7 +2,7 @@
 // { el, check(), result() -> { score, max, pending } } so the same parts power
 // the per-part drills and the full mock exam.
 import { h, shuffle, sample, LETTERS, norm, hasHanzi, toneVariants, speakBtn, zh } from './util.js';
-import { feedback, selfGrade, byLessons, writePad } from './components.js';
+import { feedback, selfGrade, writePad } from './components.js';
 import { VOCAB } from '../data/vocab.js';
 import { FILL, REORDER, MATCH, READING, ANSWER, PICTURE, CHARS } from '../data/written.js';
 
@@ -26,7 +26,7 @@ function qRow(i, ...body) {
 
 // ---------------------------------------------------------------- Part 1
 export function genPart1(n = 10) {
-  const pool = byLessons(VOCAB, n).filter((w) => /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/.test(w.p));
+  const pool = VOCAB.filter((w) => /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/.test(w.p));
   const uniq = [];
   const seen = new Set();
   for (const w of shuffle(pool)) {
@@ -68,7 +68,7 @@ export function makePart1(items, { onChange } = {}) {
 
 // ---------------------------------------------------------------- Part 2
 export function genPart2(n = 10) {
-  const pool = shuffle(byLessons(FILL, n * 2));
+  const pool = shuffle(FILL);
   const chosen = [];
   const used = new Set();
   for (const it of pool) {
@@ -112,7 +112,7 @@ export function makePart2({ items, bank }, { onChange } = {}) {
 
 // ---------------------------------------------------------------- Part 3
 export function genPart3(n = 10) {
-  return sample(byLessons(REORDER, n), n);
+  return sample(REORDER, n);
 }
 
 export function makePart3(items, { onChange } = {}) {
@@ -154,7 +154,7 @@ export function makePart3(items, { onChange } = {}) {
 
 // ---------------------------------------------------------------- Part 4
 export function genPart4(n = 10) {
-  const pool = shuffle(byLessons(MATCH, n));
+  const pool = shuffle(MATCH);
   const picked = [];
   const seenA = new Set();
   for (const m of pool) {
@@ -199,9 +199,8 @@ export function makePart4(groups, { onChange } = {}) {
 
 // ---------------------------------------------------------------- Part 5
 export function genPart5() {
-  const pool = byLessons(READING, 2);
-  const mc = shuffle(pool.filter((r) => r.mc?.length))[0] || shuffle(READING.filter((r) => r.mc?.length))[0];
-  const tf = shuffle(pool.filter((r) => r.tf?.length && r !== mc))[0] || shuffle(READING.filter((r) => r.tf?.length))[0];
+  const mc = shuffle(READING.filter((r) => r.mc?.length))[0];
+  const tf = shuffle(READING.filter((r) => r.tf?.length))[0];
   return [mc, tf].filter(Boolean);
 }
 
@@ -240,7 +239,7 @@ function speakRow(text) {
 
 // ---------------------------------------------------------------- Part 6
 export function genPart6(n = 5) {
-  return sample(byLessons(ANSWER, n), n);
+  return sample(ANSWER, n);
 }
 
 export function makePart6(items, { onChange } = {}) {
@@ -266,7 +265,7 @@ export function makePart6(items, { onChange } = {}) {
 
 // ---------------------------------------------------------------- Part 7
 export function genPart7(n = 5) {
-  return sample(byLessons(PICTURE, n), n);
+  return sample(PICTURE, n);
 }
 
 export function makePart7(items, { onChange } = {}) {
@@ -296,7 +295,7 @@ export function makePart7(items, { onChange } = {}) {
 
 // ---------------------------------------------------------------- Part 8
 export function genPart8(n = 10) {
-  const pool = shuffle(byLessons(CHARS, n));
+  const pool = shuffle(CHARS);
   const out = [];
   const seen = new Set();
   for (const c of pool) {

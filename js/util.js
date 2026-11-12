@@ -63,7 +63,7 @@ export const store = {
 };
 
 export function settings() {
-  return { theme: 'auto', pinyin: true, speed: 1, voice: 'natural', lessons: ['R', '10', '11', '12', '13', '14', '15', 'X'], examDate: '', ...store.get('settings', {}) };
+  return { theme: 'auto', pinyin: true, speed: 1, voice: 'natural', examDate: '', ...store.get('settings', {}) };
 }
 export function saveSettings(patch) {
   const s = { ...settings(), ...patch };

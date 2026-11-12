@@ -1,5 +1,5 @@
 import { h, store, logResult } from '../util.js';
-import { pageHead, lessonChips, bar } from '../components.js';
+import { pageHead, bar } from '../components.js';
 import { PARTS, BUILDERS } from '../drills.js';
 import { makeComposition, compositionTips } from '../compose.js';
 
@@ -101,7 +101,6 @@ function drill(root, part) {
 
   root.append(
     pageHead(`Part ${part.n} · ${part.pts} points`, h('span', h('span.hz', part.zh), ' ', h('span.muted', { style: { fontWeight: 600 } }, `· ${part.en}`)), part.desc, [['Written', '#/written'], [`Part ${part.n}`]]),
-    h('div.toolbar', h('span.small.muted', 'Lessons:'), lessonChips(fresh)),
     banner,
     holder,
     h('div.sticky-actions', h('a.btn.ghost', { href: part.n > 1 ? `#/written/${part.n - 1}` : '#/written' }, '←'), h('span.spacer'), newBtn, checkBtn, h('a.btn.ghost', { href: part.n < 9 ? `#/written/${part.n + 1}` : '#/mock' }, '→')),

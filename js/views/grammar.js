@@ -1,7 +1,6 @@
 import { h, zh, LETTERS, store, shuffle } from '../util.js';
 import { pageHead, feedback } from '../components.js';
 import { GRAMMAR } from '../../data/grammar.js';
-import { LESSONS, lessonById } from '../../data/vocab.js';
 
 export function render(root, { args }) {
   const id = args[0];
@@ -10,19 +9,14 @@ export function render(root, { args }) {
   const done = store.get('grammarDone', {});
   root.append(
     pageHead('Grammar · 语法', 'Every grammar point, explained simply', 'Each point has a formula, examples you can listen to, common mistakes, and a mini quiz. These patterns are exactly what parts 2, 3 and 6 of the exam test.'),
-    h('div.row', { style: { marginBottom: '18px' } }, h('a.btn.primary', { href: '#/grammar/quiz' }, '🎯 Mixed grammar quiz (all lessons)')),
-    LESSONS.filter((l) => GRAMMAR.some((g) => g.l === l.id)).map((l) =>
-      h('section', { style: { marginBottom: '22px' } },
-        h('div.row', { style: { marginBottom: '8px' } }, h('span.tag', l.short), h('h3', { style: { margin: 0 } }, h('span.hz', l.title), h('span.muted', { style: { fontWeight: 500 } }, ` · ${l.en}`))),
-        h('div.gp-list', GRAMMAR.filter((g) => g.l === l.id).map((g) =>
-          h('a.gp-item', { href: `#/grammar/${g.id}` },
-            h('span', { style: { fontSize: '1.2rem' } }, done[g.id] ? '✅' : '📘'),
-            h('div', { style: { flex: 1, minWidth: 0 } }, h('div.gt.hz', g.title), h('div.gf', g.pattern.split('\n')[0])),
-            h('span.muted', '→'),
-          ),
-        )),
+    h('div.row', { style: { marginBottom: '18px' } }, h('a.btn.primary', { href: '#/grammar/quiz' }, '🎯 Mixed grammar quiz')),
+    h('div.gp-list', GRAMMAR.map((g) =>
+      h('a.gp-item', { href: `#/grammar/${g.id}` },
+        h('span', { style: { fontSize: '1.2rem' } }, done[g.id] ? '✅' : '📘'),
+        h('div', { style: { flex: 1, minWidth: 0 } }, h('div.gt.hz', g.title), h('div.gf', g.pattern.split('\n')[0])),
+        h('span.muted', '→'),
       ),
-    ),
+    )),
   );
 }
 
@@ -54,12 +48,11 @@ function detail(root, id) {
     root.append(h('div.empty', 'Grammar point not found. ', h('a', { href: '#/grammar' }, 'Back')));
     return;
   }
-  const l = lessonById[g.l];
   const prev = GRAMMAR[idx - 1];
   const next = GRAMMAR[idx + 1];
   const quiz = quizBlock(g.quiz, (r, n) => { if (r === n) store.update('grammarDone', {}, (d) => ({ ...d, [g.id]: true })); });
   root.append(
-    pageHead(`${l?.short || ''} · ${l?.title || ''}`, h('span.hz', g.title), null, [['Grammar', '#/grammar'], [g.title]]),
+    pageHead('Grammar · 语法', h('span.hz', g.title), null, [['Grammar', '#/grammar'], [g.title]]),
     h('div.formula', g.pattern),
     h('div.card', { style: { marginTop: '16px' } }, h('p', { style: { margin: 0 } }, g.explain)),
     h('div.grid.g2', { style: { marginTop: '16px', alignItems: 'start' } },
@@ -77,11 +70,11 @@ function detail(root, id) {
 }
 
 function quizAll(root) {
-  const qs = shuffle(GRAMMAR.flatMap((g) => g.quiz.map((q) => ({ ...q, src: `${lessonById[g.l]?.short} · ${g.title}` })))).slice(0, 20);
+  const qs = shuffle(GRAMMAR.flatMap((g) => g.quiz.map((q) => ({ ...q, src: g.title })))).slice(0, 20);
   const res = h('div');
   const quiz = quizBlock(qs, (r, n) => res.replaceChildren(feedback(r / n >= 0.8 ? 'good' : 'info', h('b', `Final: ${r}/${n}. `), r / n >= 0.8 ? '很好！' : 'Review the points you missed, then try again.')));
   root.append(
-    pageHead('Grammar · 语法', 'Mixed grammar quiz', '20 random questions from every lesson. Instant feedback with explanations.', [['Grammar', '#/grammar'], ['Mixed quiz']]),
+    pageHead('Grammar · 语法', 'Mixed grammar quiz', '20 random questions from all grammar points. Instant feedback with explanations.', [['Grammar', '#/grammar'], ['Mixed quiz']]),
     h('div.card', h('div.row.between', h('span'), quiz.score), quiz.wrap, res),
     h('div.row', { style: { marginTop: '16px' } }, h('button.btn.primary', { type: 'button', onclick: () => { root.replaceChildren(); quizAll(root); } }, '↻ New quiz')),
   );

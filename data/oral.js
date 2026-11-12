@@ -526,7 +526,7 @@ export const PART3 = [
       "Open with 大家好！我叫… and close with 谢谢！ — easy points for a clear structure.",
       "Go in time order: 早上 → 上午 → 中午 → 下午 → 晚上. Starting each sentence with a time word replaces connectors like 然后 (ránhòu, then), which you only need if you are sure of it.",
       "Time always comes BEFORE the verb: 我七点起床 (not 我起床七点). Clock time + 前/后 = before/after.",
-      "Add one sentence each with 了 (今天我吃了很多米饭), 在…呢 (现在我在说中文呢) and 会/可能会 (明天我可能会…) to show lesson 11–15 grammar.",
+      "Add one sentence each with 了 (今天我吃了很多米饭), 在…呢 (现在我在说中文呢) and 会/可能会 (明天我可能会…) to show off the exam grammar.",
       "Use your real times and activities — it's easier to remember and to answer follow-up questions.",
       "Speak slowly and clearly; 8 correct sentences beat 15 broken ones. Watch tones on 起床 qǐchuáng, 睡觉 shuìjiào, 上课 shàngkè.",
     ],

@@ -1,7 +1,7 @@
-import { h, settings, speak, speakBtn, shuffle, store } from '../util.js';
-import { pageHead, lessonChips, bar } from '../components.js';
+import { h, speak, speakBtn, shuffle, store } from '../util.js';
+import { pageHead, bar } from '../components.js';
 import { grade, queue, mastery, nextDueIn } from '../srs.js';
-import { VOCAB, lessonById } from '../../data/vocab.js';
+import { VOCAB } from '../../data/vocab.js';
 
 const MODES = {
   hanzi: { label: '汉字 → meaning', front: (w) => [h('div.big', { lang: 'zh-CN' }, w.h)] },
@@ -21,18 +21,15 @@ export function render(root) {
   const stage = h('div');
   const progress = h('div');
   const modeSel = h('select.select', { onchange: (e) => { mode = e.target.value; store.set('fcMode', mode); start(); } }, Object.entries(MODES).map(([k, m]) => h('option', { value: k, selected: k === mode }, m.label)));
-  const cramBtn = h('button.chip', { type: 'button', title: 'Ignore the schedule and drill random cards', onclick: () => { cram = !cram; cramBtn.classList.toggle('on', cram); start(); } }, '⚡ Cram mode');
   const summary = h('div.small.muted');
 
-  const words = () => VOCAB.filter((w) => new Set(settings().lessons).has(w.l));
-
   function start() {
-    const ws = words();
+    const ws = VOCAB;
     deck = cram ? shuffle(ws).slice(0, 25) : queue(ws, { limit: 20 });
     i = 0;
     stats = { again: 0, ok: 0 };
     const m = mastery(ws);
-    summary.textContent = `${m.known} mastered · ${m.learning} learning · ${m.fresh} new in selected lessons`;
+    summary.textContent = `${m.known} mastered · ${m.learning} learning · ${m.fresh} new`;
     draw();
   }
 
@@ -40,17 +37,15 @@ export function render(root) {
     flipped = false;
     progress.replaceChildren(h('div.row.between.small.muted', h('span', deck.length ? `Card ${Math.min(i + 1, deck.length)} of ${deck.length}` : ''), h('span', `✓ ${stats.ok} · ↺ ${stats.again}`)), bar(deck.length ? (i / deck.length) * 100 : 0));
     if (!deck.length) {
-      const ws = words();
-      const due = nextDueIn(ws);
-      stage.replaceChildren(h('div.card.empty', h('div', { style: { fontSize: '3rem' } }, '🎉'), h('h2', 'All caught up!'), h('p', due != null ? `Next review in about ${Math.max(1, Math.round(due / 60000))} min.` : 'Pick some lessons above.'), h('button.btn.primary', { type: 'button', onclick: () => { cram = true; cramBtn.classList.add('on'); start(); } }, '⚡ Cram anyway')));
+      const due = nextDueIn(VOCAB);
+      stage.replaceChildren(h('div.card.empty', h('div', { style: { fontSize: '3rem' } }, '🎉'), h('h2', 'All caught up!'), due != null ? h('p', `Next review in about ${Math.max(1, Math.round(due / 60000))} min.`) : null, h('button.btn.primary', { type: 'button', onclick: () => { cram = true; start(); } }, '⚡ Practise random cards anyway')));
       return;
     }
     if (i >= deck.length) {
-      stage.replaceChildren(h('div.card.empty', h('div', { style: { fontSize: '3rem' } }, '✅'), h('h2', 'Session complete'), h('p', `You knew ${stats.ok} and need more practice on ${stats.again}.`), h('div.row', { style: { justifyContent: 'center' } }, h('button.btn.primary', { type: 'button', onclick: start }, 'Next session'), h('a.btn', { href: '#/vocab' }, 'Word list'))));
+      stage.replaceChildren(h('div.card.empty', h('div', { style: { fontSize: '3rem' } }, '✅'), h('h2', 'Session complete'), h('p', `You knew ${stats.ok} and need more practice on ${stats.again}.`), h('div.row', { style: { justifyContent: 'center' } }, h('button.btn.primary', { type: 'button', onclick: () => { cram = false; start(); } }, 'Next session'), h('a.btn', { href: '#/vocab' }, 'Word list'))));
       return;
     }
     const w = deck[i];
-    const l = lessonById[w.l];
     const back = [
       h('div.big', { lang: 'zh-CN', style: { fontSize: '4rem' } }, w.h),
       h('div.pin', w.p),
@@ -58,8 +53,8 @@ export function render(root) {
       h('div.small.muted', w.pos),
     ];
     const card = h('div.fc', { role: 'button', tabindex: 0, 'aria-label': 'Flip card', onclick: flip },
-      h('div.fc-face.front', h('span.corner.tag', l.short), ...MODES[mode].front(w), h('div.hint', 'Click or press Space to flip')),
-      h('div.fc-face.back', h('span.corner.tag', l.short), speakBtn(w.h), ...back),
+      h('div.fc-face.front', ...MODES[mode].front(w), h('div.hint', 'Click or press Space to flip')),
+      h('div.fc-face.back', speakBtn(w.h), ...back),
     );
     const gradeRow = h('div.grade', { style: { visibility: 'hidden' } },
       gbtn('again', 'Again', '1 · forgot', 0),
@@ -105,8 +100,7 @@ export function render(root) {
 
   root.append(
     pageHead('Flashcards · 卡片', 'Spaced-repetition flashcards', 'Cards you miss come back quickly; cards you know wait longer. 20 cards per session — do a few sessions a day this week.'),
-    h('div.toolbar', modeSel, cramBtn, h('span.spacer'), summary),
-    h('div.toolbar', lessonChips(start)),
+    h('div.toolbar', modeSel, h('span.spacer'), summary),
     h('div.fc-wrap', progress, stage),
   );
   start();

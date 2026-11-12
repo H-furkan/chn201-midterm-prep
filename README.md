@@ -1,6 +1,6 @@
 # 中文 CHN201 · Midterm Prep
 
-A study website for the CHN201 midterm (HSK Standard Course 1, lessons 10–15 plus review of lessons 1–9). It is built from the class slides, the Wordwall flashcards, the sample midterm paper and the oral-exam Q&A sheet.
+A study website for the CHN201 midterm. It is built from the class slides, the Wordwall flashcards, the sample midterm paper and the oral-exam Q&A sheet.
 
 **Live site:** https://h-furkan.github.io/chn201-midterm-prep/
 
@@ -8,8 +8,8 @@ A study website for the CHN201 midterm (HSK Standard Course 1, lessons 10–15 p
 
 | Section | What it does |
 |---|---|
-| **Vocabulary** | Every word by lesson, with pinyin, English and audio. You can search it or switch to a table view. |
-| **Flashcards** | Spaced repetition with four modes: 汉字→meaning, English→汉字, pinyin→汉字 and listening. A cram mode drills random cards. |
+| **Vocabulary** | Every exam word in one searchable list, with pinyin, English and audio. |
+| **Flashcards** | Spaced repetition with four modes: 汉字→meaning, English→汉字, pinyin→汉字 and listening. When nothing is due, you can keep practising random cards. |
 | **Grammar** | 35 grammar points, each with a formula, audio examples, common mistakes and a mini quiz. There is also a mixed quiz. |
 | **Handwriting** | Write characters stroke by stroke on a 田字格 grid. Wrong strokes are rejected. A test mode hides the outline. |
 | **Written drills** | One drill for each of the 9 parts of the written paper, in the sample exam's format. Every set is random. |
@@ -34,7 +34,7 @@ python3 -m http.server 8000
 
 All content is in `data/`:
 
-- `vocab.js`: lessons and words
+- `vocab.js`: words
 - `grammar.js`: grammar points and quizzes
 - `written.js`: question banks for written parts 2–8
 - `oral.js`: oral parts 1–3, including the Q&A sheet

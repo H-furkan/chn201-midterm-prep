@@ -1,18 +1,6 @@
-// Vocabulary for CHN201 (HSK Standard Course 1).
-// Lessons 11–15 follow the teacher's Wordwall flashcard lists + slide word lists.
-// Lesson 10 is covered by the oral Q&A sheet. "R" = review of lessons 1–9, "X" = extra words
-// that appear in the sample exam / class slides.
-
-export const LESSONS = [
-  { id: 'R', n: 0, short: 'L1–9', title: '复习', pinyin: 'fùxí', en: 'Review of lessons 1–9', color: 'c6' },
-  { id: '10', n: 10, short: 'L10', title: '我能坐这儿吗？', pinyin: 'Wǒ néng zuò zhèr ma?', en: 'Can I sit here?', color: 'c1' },
-  { id: '11', n: 11, short: 'L11', title: '现在几点？', pinyin: 'Xiànzài jǐ diǎn?', en: 'What time is it now?', color: 'c2' },
-  { id: '12', n: 12, short: 'L12', title: '明天天气怎么样？', pinyin: 'Míngtiān tiānqì zěnmeyàng?', en: "What will the weather be like tomorrow?", color: 'c3' },
-  { id: '13', n: 13, short: 'L13', title: '她在学做中国菜呢', pinyin: 'Tā zài xué zuò Zhōngguó cài ne', en: 'She is learning to cook Chinese food', color: 'c4' },
-  { id: '14', n: 14, short: 'L14', title: '她买了不少衣服', pinyin: 'Tā mǎile bù shǎo yīfu', en: 'She has bought quite a few clothes', color: 'c5' },
-  { id: '15', n: 15, short: 'L15', title: '我是坐飞机来的', pinyin: 'Wǒ shì zuò fēijī lái de', en: 'I came here by plane', color: 'c1' },
-  { id: 'X', n: 99, short: 'Extra', title: '考试常见词', pinyin: 'kǎoshì chángjiàn cí', en: 'Extra words seen in the sample exam & slides', color: 'c6' },
-];
+// Every word for the CHN201 midterm (HSK Standard Course 1): the teacher's Wordwall flashcards and
+// slide word lists, the oral Q&A sheet, review words, and extra words seen in the sample exam.
+// RAW groups are only where each word was sourced from; the site treats all words as one exam list.
 
 // [hanzi, pinyin, english, part-of-speech]
 const RAW = {
@@ -283,8 +271,15 @@ const RAW = {
   ],
 };
 
-export const VOCAB = Object.entries(RAW).flatMap(([lesson, rows]) =>
-  rows.map(([h, p, e, pos], i) => ({ id: `${lesson}-${i}`, h, p, e, pos, l: lesson })),
-);
-
-export const lessonById = Object.fromEntries(LESSONS.map((l) => [l.id, l]));
+// One entry per hanzi: words listed under several sources are merged (meanings combined).
+export const VOCAB = (() => {
+  const byHanzi = new Map();
+  for (const [src, rows] of Object.entries(RAW)) {
+    rows.forEach(([h, p, e, pos], i) => {
+      const prev = byHanzi.get(h);
+      if (!prev) byHanzi.set(h, { id: `${src}-${i}`, h, p, e, pos });
+      else if (!prev.e.includes(e)) prev.e = `${prev.e}; ${e}`;
+    });
+  }
+  return [...byHanzi.values()];
+})();

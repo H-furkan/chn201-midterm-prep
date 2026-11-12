@@ -23,7 +23,6 @@ export function render(root) {
           h('li', 'Turn pinyin OFF (press P) — the real paper only gives pinyin in some parts.'),
           h('li', 'No dictionary, no phone. Write answers in Hanzi where you can.'),
           h('li', 'The timer is a guide: the real exam is 120 minutes.'),
-          h('li', 'Lesson filter is ignored here — the mock covers everything.'),
         ), start),
         history.length
           ? h('div.card', h('h3', 'Your previous mocks'), history.slice(-6).reverse().map((m) => h('div', { style: { margin: '8px 0' } }, h('div.row.between.small', h('span', new Date(m.t).toLocaleString()), h('b', `${m.score}/100${m.bonus ? ` (+${m.bonus})` : ''}`)), bar(m.score, '.jade'))))
@@ -36,18 +35,14 @@ export function render(root) {
 
 function exam(root) {
   stopTimer?.();
-  const saved = store.get('settings', {});
-  // Mock covers all lessons regardless of the filter.
-  store.set('settings', { ...saved, lessons: ['R', '10', '11', '12', '13', '14', '15', 'X'] });
   const parts = PARTS.map((p) => {
     const built = p.n === 9 ? makeComposition({ topicId: COMPOSITION[Math.floor(Math.random() * COMPOSITION.length)].id, compact: true, onChange: () => submitted && refresh() }) : BUILDERS[p.n].make(BUILDERS[p.n].gen(), { onChange: () => submitted && refresh() });
     return { p, built };
   });
-  store.set('settings', saved);
 
   let left = DURATION;
   let submitted = false;
-  let saved2 = false;
+  let scoreSaved = false;
   const timer = h('span.timer', fmtTime(left));
   const iv = setInterval(() => {
     left--;
@@ -94,7 +89,7 @@ function exam(root) {
         ),
         h('table.breakdown', { style: { width: '100%', borderCollapse: 'collapse', marginTop: '10px' } }, h('tbody', t.rows.map(({ p, pts }) => h('tr', h('td', `${CN_NUM[p.n - 1]}、`, h('span.hz', p.zh), h('span.small.muted', ` · ${p.en}`)), h('td', `${pts} / ${p.pts}`))))),
         h('div.row', { style: { marginTop: '12px' } },
-          h('button.btn.jade', { type: 'button', disabled: saved2, onclick: (e) => { saveMock(t); saved2 = true; e.target.disabled = true; e.target.textContent = 'Saved ✓'; } }, saved2 ? 'Saved ✓' : 'Save score to history'),
+          h('button.btn.jade', { type: 'button', disabled: scoreSaved, onclick: (e) => { saveMock(t); scoreSaved = true; e.target.disabled = true; e.target.textContent = 'Saved ✓'; } }, scoreSaved ? 'Saved ✓' : 'Save score to history'),
           h('button.btn', { type: 'button', onclick: () => exam(root) }, 'New mock exam'),
         ),
       ),

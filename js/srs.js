@@ -44,7 +44,7 @@ export function mastery(words) {
   return { known, learning, fresh: words.length - known - learning, total: words.length };
 }
 
-/** Due cards first (oldest due first), then unseen cards in lesson order. */
+/** Due cards first (oldest due first), then unseen cards in list order. */
 export function queue(words, { includeNew = true, limit = 20 } = {}) {
   const all = srsAll();
   const now = Date.now();

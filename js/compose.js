@@ -7,7 +7,7 @@ const RUBRIC = [
   ['Length', '100+ characters/syllables, complete text'],
   ['Content', 'On topic, covers several points from the outline'],
   ['Grammar', 'Correct word order: Subject + Time + Place + Verb; 了 / 的 / 在 / 是…的 used correctly'],
-  ['Vocabulary', 'Uses lesson words, measure words, time expressions'],
+  ['Vocabulary', 'Uses course words, measure words, time expressions'],
 ];
 
 export function makeComposition({ topicId, onChange, compact = false } = {}) {
