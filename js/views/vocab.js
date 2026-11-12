@@ -1,4 +1,4 @@
-import { h, settings, saveSettings, speakBtn, speak, store } from '../util.js';
+import { h, settings, saveSettings, speakBtn, speak, store, stopSpeaking } from '../util.js';
 import { pageHead, lessonChips } from '../components.js';
 import { srsAll, MAX_BOX } from '../srs.js';
 import { VOCAB, LESSONS, lessonById } from '../../data/vocab.js';
@@ -49,7 +49,7 @@ export function render(root, { params }) {
 
   let playing = false;
   async function playAll(ws) {
-    if (playing) { playing = false; speechSynthesis.cancel(); return; }
+    if (playing) { playing = false; stopSpeaking(); return; }
     playing = true;
     for (const w of ws) {
       if (!playing) break;

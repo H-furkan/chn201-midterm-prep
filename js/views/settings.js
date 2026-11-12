@@ -5,12 +5,12 @@ const KEYS = () => Object.keys(localStorage).filter((k) => k.startsWith('chn201:
 
 export function render(root) {
   const s = settings();
-  const rateOut = h('b', `${s.rate.toFixed(2)}×`);
-  const voiceNote = !canSpeak()
-    ? 'This browser cannot speak. Use Chrome, Safari or Edge.'
+  const rateOut = h('b', `${s.speed.toFixed(2)}×`);
+  const browserNote = !canSpeak()
+    ? 'This browser has no built-in speech, so only the recorded voice will play.'
     : hasZhVoice()
-      ? 'A Mandarin voice is available ✓'
-      : 'No Mandarin voice found. On Windows: Settings → Time & Language → Speech → add Chinese (Simplified). On Android: install Google TTS Chinese voice.';
+      ? 'Your browser has a Mandarin voice ✓ (used for anything without a recording).'
+      : 'Your browser has no Mandarin voice; anything without a recording stays silent. Windows: Settings → Time & Language → Speech → add Chinese (Simplified).';
 
   const file = h('input', { type: 'file', accept: 'application/json', style: { display: 'none' }, onchange: importData });
 
@@ -40,8 +40,12 @@ export function render(root) {
         h('label.row.between', 'Show pinyin (shortcut: P)', h('input', { type: 'checkbox', checked: s.pinyin, onchange: (e) => { saveSettings({ pinyin: e.target.checked }); document.documentElement.classList.toggle('hide-pinyin', !e.target.checked); } })),
         h('hr.hr'),
         h('h3', 'Voice'),
-        h('p.small.muted', voiceNote),
-        h('label.stack', h('span.row.between', 'Speaking speed', rateOut), h('input', { type: 'range', min: 0.5, max: 1.2, step: 0.05, value: s.rate, style: { width: '100%' }, oninput: (e) => { saveSettings({ rate: Number(e.target.value) }); rateOut.textContent = `${Number(e.target.value).toFixed(2)}×`; } })),
+        h('label.row.between', 'Voice', h('select.select', { onchange: (e) => saveSettings({ voice: e.target.value }) },
+          h('option', { value: 'natural', selected: s.voice !== 'browser' }, 'Natural (recorded neural voice)'),
+          h('option', { value: 'browser', selected: s.voice === 'browser' }, 'Browser voice'),
+        )),
+        h('p.small.muted', 'All lesson words, examples, Q&As and model answers are pre-recorded with a natural Mandarin voice. ', browserNote),
+        h('label.stack', h('span.row.between', 'Speaking speed', rateOut), h('input', { type: 'range', min: 0.6, max: 1.3, step: 0.05, value: s.speed, style: { width: '100%' }, oninput: (e) => { saveSettings({ speed: Number(e.target.value) }); rateOut.textContent = `${Number(e.target.value).toFixed(2)}×`; } })),
         h('button.btn', { type: 'button', onclick: () => speak('你好！我是你的中文老师。明天考试，加油！') }, '▶ Test voice'),
       ),
       h('div.card.stack',
@@ -52,7 +56,7 @@ export function render(root) {
         h('hr.hr'),
         h('h3', 'About'),
         h('p.small', 'Built for CHN201 (METU Modern Languages, HSK Standard Course 1, lessons 10–15) from the class slides, Wordwall flashcards, the sample midterm and the oral Q&A sheet. All exercises are generated for practice — they are not the real exam.'),
-        h('p.small.muted', 'Stroke data: Hanzi Writer (MIT) / Make Me a Hanzi. Speech: your browser’s built-in voices.'),
+        h('p.small.muted', 'Stroke data: Hanzi Writer (MIT) / Make Me a Hanzi. Audio: Microsoft neural voice zh-CN-Xiaoxiao (pre-generated), browser voice as fallback.'),
       ),
     ),
   );

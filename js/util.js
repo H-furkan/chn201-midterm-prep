@@ -63,7 +63,7 @@ export const store = {
 };
 
 export function settings() {
-  return { theme: 'auto', pinyin: true, rate: 0.85, lessons: ['R', '10', '11', '12', '13', '14', '15', 'X'], examDate: '', ...store.get('settings', {}) };
+  return { theme: 'auto', pinyin: true, speed: 1, voice: 'natural', lessons: ['R', '10', '11', '12', '13', '14', '15', 'X'], examDate: '', ...store.get('settings', {}) };
 }
 export function saveSettings(patch) {
   const s = { ...settings(), ...patch };
@@ -118,7 +118,8 @@ function loadVoices() {
   if (!voices.length) return;
   voicesLoaded = true;
   const zhs = voices.filter((v) => /^zh(-|_)?(CN|Hans)?/i.test(v.lang) && !/HK|TW|yue/i.test(v.lang));
-  const pref = ['Tingting', 'Ting-Ting', 'Google 普通话', 'Xiaoxiao', 'Yunxi', 'Lili', 'Meijia'];
+  // Prefer neural/online voices (Edge "Xiaoxiao Online (Natural)", Chrome "Google 普通话") over older system voices.
+  const pref = ['Xiaoxiao', 'Yunxi', 'Natural', 'Google 普通话', 'Google', 'Tingting', 'Ting-Ting', 'Lili', 'Meijia'];
   zhVoice = pref.map((n) => zhs.find((v) => v.name.includes(n))).find(Boolean) || zhs[0] || voices.find((v) => /^zh/i.test(v.lang)) || null;
 }
 if ('speechSynthesis' in window) {
@@ -128,23 +129,55 @@ if ('speechSynthesis' in window) {
 export const canSpeak = () => 'speechSynthesis' in window;
 export const hasZhVoice = () => !!zhVoice || !voicesLoaded;
 
+// Pre-recorded neural-voice audio (audio/manifest.json maps text -> mp3; see tools/gen_audio.py).
+const AUDIO_BASE = new URL('../audio/', import.meta.url);
+let manifest = {};
+const manifestReady = fetch(new URL('manifest.json', AUDIO_BASE))
+  .then((r) => (r.ok ? r.json() : {}))
+  .then((m) => (manifest = m))
+  .catch(() => {});
+export const hasRecording = (text) => !!manifest[text];
+
+let currentAudio = null;
 let current = null;
-/** Speak Chinese text. Resolves when finished. */
-export function speak(text, { rate, onend } = {}) {
+
+/** Speak Chinese text: recorded natural voice when available, browser TTS otherwise. Resolves when finished. */
+export async function speak(text, { onend } = {}) {
+  stopSpeaking();
+  await manifestReady;
+  const s = settings();
+  const file = s.voice !== 'browser' && manifest[text];
+  const finish = (resolve) => { onend?.(); resolve(); };
+  if (file) {
+    const a = new Audio(new URL(file, AUDIO_BASE));
+    a.playbackRate = s.speed;
+    a.preservesPitch = true;
+    currentAudio = a;
+    return new Promise((resolve) => {
+      a.onended = () => { if (currentAudio === a) currentAudio = null; finish(resolve); };
+      // Missing file / decode error: fall back to the browser voice.
+      a.onerror = () => { if (currentAudio === a) currentAudio = null; ttsSpeak(text, s.speed).then(() => finish(resolve)); };
+      a.play().catch(() => { if (currentAudio === a) currentAudio = null; finish(resolve); });
+    });
+  }
+  await ttsSpeak(text, s.speed);
+  onend?.();
+}
+
+function ttsSpeak(text, speed) {
   if (!canSpeak()) {
     toast('Speech is not supported in this browser');
     return Promise.resolve();
   }
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(String(text).replace(/___+/g, '什么'));
+  const u = new SpeechSynthesisUtterance(String(text).replace(/_{2,}/g, '……'));
   u.lang = 'zh-CN';
   if (zhVoice) u.voice = zhVoice;
-  u.rate = rate ?? settings().rate;
+  u.rate = 0.85 * speed; // system voices are fast; 0.85 ≈ the recorded audio's pace
   current = u;
   return new Promise((resolve) => {
     const done = () => {
       if (current === u) current = null;
-      onend?.();
       resolve();
     };
     u.onend = done;
@@ -152,7 +185,13 @@ export function speak(text, { rate, onend } = {}) {
     speechSynthesis.speak(u);
   });
 }
+
 export function stopSpeaking() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.onended?.();
+    currentAudio = null;
+  }
   if (canSpeak()) speechSynthesis.cancel();
 }
 
