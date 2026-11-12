@@ -1,4 +1,4 @@
-import { h, zh, speak, speakBtn, shuffle, norm, logResult, fmtTime, settings, store, stopSpeaking } from '../util.js';
+import { h, zh, speak, speakSequence, speakBtn, shuffle, norm, logResult, fmtTime, settings, store, stopSpeaking } from '../util.js';
 import { pageHead, lessonChips, byLessons, bar, feedback } from '../components.js';
 import { recorder, recognizeOnce, canRecognize } from '../media.js';
 import { PART1, PART2, PART3 } from '../../data/oral.js';
@@ -121,11 +121,8 @@ function part2(root) {
     draw();
   }
 
-  async function playDialog(x) {
-    for (const t of x.turns) {
-      await speak(t.h);
-      await new Promise((r) => setTimeout(r, 350));
-    }
+  function playDialog(x) {
+    return speakSequence(x.turns.map((t) => t.h), 350);
   }
 
   function exam() {

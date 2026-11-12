@@ -139,60 +139,93 @@ const manifestReady = fetch(new URL('manifest.json', AUDIO_BASE))
 export const hasRecording = (text) => !!manifest[text];
 
 let currentAudio = null;
-let current = null;
+let current = null; // active SpeechSynthesisUtterance
+let gen = 0; // playback generation; bumped by every speak()/stopSpeaking()
+let pending = null; // resolver of the active playback
 
-/** Speak Chinese text: recorded natural voice when available, browser TTS otherwise. Resolves when finished. */
+function settle(completed) {
+  const p = pending;
+  pending = null;
+  p?.(completed);
+}
+
+/**
+ * Speak Chinese text: recorded natural voice when available, browser TTS otherwise.
+ * Resolves `true` when it played to the end, `false` when interrupted (another clip,
+ * stopSpeaking(), navigation) — sequences must stop on `false`.
+ */
 export async function speak(text, { onend } = {}) {
   stopSpeaking();
+  const token = gen;
   await manifestReady;
+  if (token !== gen) return false; // superseded while the manifest loaded
   const s = settings();
   const file = s.voice !== 'browser' && manifest[text];
-  const finish = (resolve) => { onend?.(); resolve(); };
-  if (file) {
-    const a = new Audio(new URL(file, AUDIO_BASE));
-    a.playbackRate = s.speed;
-    a.preservesPitch = true;
-    currentAudio = a;
-    return new Promise((resolve) => {
-      a.onended = () => { if (currentAudio === a) currentAudio = null; finish(resolve); };
-      // Missing file / decode error: fall back to the browser voice.
-      a.onerror = () => { if (currentAudio === a) currentAudio = null; ttsSpeak(text, s.speed).then(() => finish(resolve)); };
-      a.play().catch(() => { if (currentAudio === a) currentAudio = null; finish(resolve); });
-    });
-  }
-  await ttsSpeak(text, s.speed);
+  const done = await (file ? playFile(text, file, s.speed) : ttsSpeak(text, s.speed));
   onend?.();
+  return done;
+}
+
+function playFile(text, file, speed) {
+  const a = new Audio(new URL(file, AUDIO_BASE));
+  a.playbackRate = speed;
+  a.preservesPitch = true;
+  currentAudio = a;
+  return new Promise((resolve) => {
+    pending = resolve;
+    a.onended = () => { if (currentAudio === a) { currentAudio = null; settle(true); } };
+    // Missing file / decode error: fall back to the browser voice for this clip.
+    a.onerror = () => {
+      if (currentAudio !== a) return;
+      currentAudio = null;
+      pending = null;
+      ttsSpeak(text, speed).then(resolve);
+    };
+    a.play().catch(() => { if (currentAudio === a) { currentAudio = null; settle(false); } });
+  });
 }
 
 function ttsSpeak(text, speed) {
   if (!canSpeak()) {
     toast('Speech is not supported in this browser');
-    return Promise.resolve();
+    return Promise.resolve(false);
   }
-  speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(String(text).replace(/_{2,}/g, '……'));
   u.lang = 'zh-CN';
   if (zhVoice) u.voice = zhVoice;
   u.rate = 0.85 * speed; // system voices are fast; 0.85 ≈ the recorded audio's pace
   current = u;
   return new Promise((resolve) => {
-    const done = () => {
-      if (current === u) current = null;
-      resolve();
-    };
-    u.onend = done;
-    u.onerror = done;
+    pending = resolve;
+    // Handlers of a cancelled utterance fire late; only the current one may settle.
+    u.onend = () => { if (current === u) { current = null; settle(true); } };
+    u.onerror = () => { if (current === u) { current = null; settle(false); } };
     speechSynthesis.speak(u);
   });
 }
 
+/** Play clips in order with a pause between them; stops (returns false) as soon as anything else plays or stops. */
+export async function speakSequence(texts, gapMs = 400) {
+  for (let i = 0; i < texts.length; i++) {
+    if (!(await speak(texts[i]))) return false;
+    if (i < texts.length - 1) {
+      const g = gen;
+      await new Promise((r) => setTimeout(r, gapMs));
+      if (g !== gen) return false;
+    }
+  }
+  return true;
+}
+
 export function stopSpeaking() {
+  gen++;
   if (currentAudio) {
     currentAudio.pause();
-    currentAudio.onended?.();
     currentAudio = null;
   }
+  current = null;
   if (canSpeak()) speechSynthesis.cancel();
+  settle(false);
 }
 
 export function speakBtn(text, label = 'Listen') {
