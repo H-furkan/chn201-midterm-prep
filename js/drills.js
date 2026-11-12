@@ -2,13 +2,13 @@
 // { el, check(), result() -> { score, max, pending } } so the same parts power
 // the per-part drills and the full mock exam.
 import { h, shuffle, sample, LETTERS, norm, hasHanzi, speakBtn, zh } from './util.js';
-import { feedback, selfGrade, writePad } from './components.js';
+import { feedback, selfGrade, writePad, dropBoard, tz } from './components.js';
 import { VOCAB } from '../data/vocab.js';
 import { FILL, REORDER, MATCH, READING, ANSWER, PICTURE, CHARS } from '../data/written.js';
 
 export const PARTS = [
-  { n: 1, zh: '看词语，选拼音', en: 'Hanzi → pinyin', desc: 'Match each word with its pinyin (A–J), like the real paper.', pts: 10, each: 1, count: 10 },
-  { n: 2, zh: '选词填空', en: 'Fill in the blanks', desc: 'Choose words from the bank (A–K) to complete each sentence.', pts: 10, each: 1, count: 10 },
+  { n: 1, zh: '看词语，选拼音', en: 'Hanzi → pinyin', desc: 'Drag each pinyin onto its word, or tap a pinyin and then tap the word.', pts: 10, each: 1, count: 10 },
+  { n: 2, zh: '选词填空', en: 'Fill in the blanks', desc: 'Drag words from the bank into the blanks, or tap a word and then tap a blank. One word is extra.', pts: 10, each: 1, count: 10 },
   { n: 3, zh: '排词成句', en: 'Build the sentence', desc: 'Put the pieces in the right order. Answer in Hanzi.', pts: 20, each: 2, count: 10 },
   { n: 4, zh: '匹配', en: 'Match Q & A', desc: 'Match each question with its answer.', pts: 10, each: 1, count: 10 },
   { n: 5, zh: '阅读', en: 'Reading', desc: 'Read the passages: choose A/B, or judge true (√) / false (×).', pts: 10, each: 1, count: 10 },
@@ -43,24 +43,24 @@ export function genPart1(n = 10) {
 }
 
 export function makePart1({ items, options }, { onChange } = {}) {
-  const bank = h('div.bank', options.map((p, i) => h('span.tok', { style: { fontFamily: 'var(--font-ui)' } }, h('span.tl', LETTERS[i]), p)));
+  const board = dropBoard(options.map((p) => ({ value: p, label: p })), items.length, { onChange });
+  board.bank.classList.add('latin');
   const rows = items.map((w, i) => {
-    const sel = h('select.blank-select', { 'aria-label': `Pinyin for ${w.h}`, onchange: () => onChange?.() }, h('option', { value: '' }, '（ ）'), options.map((p, j) => h('option', { value: p }, LETTERS[j])));
     const fb = h('div');
-    const row = qRow(i, h('div.row', h('span.hz-big', { lang: 'zh-CN', style: { fontSize: '2rem', minWidth: '4.5em' } }, w.h), sel), fb);
-    return { row, sel, fb, w };
+    const row = qRow(i, h('div.p1-row', tz(w.h, 'md'), board.slots[i]), fb);
+    return { row, fb, w };
   });
   return {
-    el: h('div', h('p.small.muted', 'Pinyin:'), bank, rows.map((r) => r.row)),
+    el: h('div', board.bank, rows.map((r) => r.row)),
     check() {
-      for (const r of rows) {
-        const ok = r.sel.value === r.w.p;
-        r.sel.disabled = true;
-        r.sel.classList.add(ok ? 'correct' : 'wrong');
-        r.fb.replaceChildren(h('div.row.small', { style: { marginTop: '8px' } }, speakBtn(r.w.h), h('span', ok ? '✓ ' : `✗ ${LETTERS[options.indexOf(r.w.p)]} · `, h('b', r.w.p), ` — ${r.w.e}`)));
-      }
+      board.lock();
+      rows.forEach((r, i) => {
+        const ok = board.value(i) === r.w.p;
+        board.mark(i, ok);
+        r.fb.replaceChildren(h('div.row.small', { style: { marginTop: '8px' } }, speakBtn(r.w.h), h('span', ok ? '✓ ' : `✗ ${LETTERS[options.indexOf(r.w.p)]}: `, h('b', r.w.p), `, ${r.w.e}`)));
+      });
     },
-    result: () => ({ score: rows.filter((r) => r.sel.value === r.w.p).length, max: rows.length }),
+    result: () => ({ score: rows.filter((r, i) => board.value(i) === r.w.p).length, max: rows.length }),
   };
 }
 
@@ -85,26 +85,25 @@ export function genPart2(n = 10) {
 }
 
 export function makePart2({ items, bank }, { onChange } = {}) {
-  const bankEl = h('div.bank', bank.map((w, i) => h('span.tok', h('span.tl', LETTERS[i]), w)));
+  const board = dropBoard(bank.map((w) => ({ value: w, label: w })), items.length, { onChange });
   const rows = items.map((it, i) => {
-    const sel = h('select.blank-select', { 'aria-label': `Blank ${i + 1}`, onchange: () => onChange?.() }, h('option', { value: '' }, '（  ）'), bank.map((w, j) => h('option', { value: w }, `${LETTERS[j]}. ${w}`)));
     const [before, after = ''] = it.s.split(/（\s*）|\(\s*\)/);
     const fb = h('div');
-    const row = qRow(i, h('div.zh-line', h('span.h', { lang: 'zh-CN' }, before, ' ', sel, ' ', after)), fb);
-    return { sel, fb, row };
+    const row = qRow(i, h('div.zh-line', h('span.h.fill-line', { lang: 'zh-CN' }, before, board.slots[i], after)), fb);
+    return { fb, row };
   });
   return {
-    el: h('div', h('p.small.muted', 'Word bank:'), bankEl, rows.map((r) => r.row)),
+    el: h('div', board.bank, rows.map((r) => r.row)),
     check() {
+      board.lock();
       rows.forEach((r, i) => {
         const it = items[i];
-        const ok = r.sel.value === it.a;
-        r.sel.disabled = true;
-        r.sel.classList.add(ok ? 'correct' : 'wrong');
-        r.fb.replaceChildren(feedback(ok ? 'good' : 'bad', ok ? '✓ ' : `✗ Answer: ${LETTERS[bank.indexOf(it.a)]}. ${it.a} · `, zh(it.s.replace(/（\s*）|\(\s*\)/, `（${it.a}）`), it.p, it.e)));
+        const ok = board.value(i) === it.a;
+        board.mark(i, ok);
+        r.fb.replaceChildren(feedback(ok ? 'good' : 'bad', ok ? '✓ ' : `✗ Answer: ${LETTERS[bank.indexOf(it.a)]} ${it.a}. `, zh(it.s.replace(/（\s*）|\(\s*\)/, `（${it.a}）`), it.p, it.e)));
       });
     },
-    result: () => ({ score: rows.filter((r, i) => r.sel.value === items[i].a).length, max: items.length }),
+    result: () => ({ score: items.filter((it, i) => board.value(i) === it.a).length, max: items.length }),
   };
 }
 
@@ -310,7 +309,7 @@ export function makePart8(items, { onChange } = {}) {
     const input = h('input.input', { type: 'text', lang: 'zh-CN', placeholder: '汉字', autocomplete: 'off', style: { width: '110px', display: 'inline-block', padding: '6px 10px', fontSize: '1.2rem', textAlign: 'center' }, oninput: () => onChange?.() });
     const m = it.s.match(/^(.*?)[（(]\s*([^）)]+?)\s*[）)](.*)$/);
     const sentence = m
-      ? h('span.zh-line', h('span.h', { lang: 'zh-CN' }, m[1], h('span', { style: { color: 'var(--accent)', fontFamily: 'var(--font-ui)', fontSize: '.9em', margin: '0 4px' } }, `（${m[2]}）`), m[3]))
+      ? h('span.zh-line', h('span.h', { lang: 'zh-CN' }, m[1], h('span', { style: { color: 'var(--red)', fontFamily: 'var(--font-ui)', fontSize: '.85em', margin: '0 4px' } }, `（${m[2]}）`), m[3]))
       : h('span.zh-line', h('span.h', it.s));
     const fb = h('div');
     const padSlot = h('div');

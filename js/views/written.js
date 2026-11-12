@@ -24,18 +24,18 @@ export function render(root, { args }) {
 
 function hub(root) {
   root.append(
-    pageHead('Written exam · 笔试', 'Drill every part of the paper', 'Each drill copies the format of the sample midterm (120 min, 100 points). Pick a part, answer the whole set, then press Check. Sets are random every time — repeat until you hit 100%.'),
+    pageHead('笔试', 'Written exam', 'Each part is practised in the same format as the sample paper. Answer the whole set, then check it. You get new questions every time.'),
     h('div.grid.g3', PARTS.map((p) => {
       const b = best(`p${p.n}`);
       return h('a.tile', { href: `#/written/${p.n}` },
-        h('span.tp', h('span.tag.accent', `${p.pts} pts`)),
+        h('span.tp', `${p.pts} points`),
         h('span.tc', CN_NUM[p.n - 1]),
-        h('span.tt', h('span.hz', p.zh)),
-        h('span.td', `${p.en} — ${p.desc}`),
-        b != null ? h('div', { style: { marginTop: '6px' } }, h('div.small.muted', `Best: ${b}%`), bar(b, '.jade')) : h('span.small.muted', { style: { marginTop: '6px' } }, 'Not tried yet'),
+        h('span.tt.hz', p.zh),
+        h('span.td', p.en),
+        b != null ? h('div', { style: { marginTop: 'auto', paddingTop: '8px' } }, h('div.small.muted', `Best: ${b}%`), bar(b, '.jade')) : null,
       );
     })),
-    h('div.card', { style: { marginTop: '20px' } }, h('h3', 'Ready for the real thing?'), h('p.muted', 'The mock exam puts all nine parts together with a 120-minute timer and a score out of 100.'), h('a.btn.primary', { href: '#/mock' }, 'Start a mock exam →')),
+    h('div.row.between', { style: { marginTop: '22px', padding: '18px 0', borderTop: '1px solid var(--rule)' } }, h('p.muted', { style: { margin: 0 } }, 'All nine parts together, timed, scored out of 100.'), h('a.btn.primary', { href: '#/mock' }, 'Start a mock exam')),
   );
 }
 
@@ -43,7 +43,7 @@ function drill(root, part) {
   const holder = h('div');
   const banner = h('div');
   const checkBtn = h('button.btn.primary', { type: 'button' }, 'Check answers');
-  const newBtn = h('button.btn', { type: 'button' }, '↻ New set');
+  const newBtn = h('button.btn', { type: 'button' }, 'New set');
   let cur = null;
   let checked = false;
 
@@ -53,9 +53,9 @@ function drill(root, part) {
     const pct = Math.round((r.score / r.max) * 100);
     banner.replaceChildren(
       h('div.score-banner',
-        h('div.big', `${r.score}/${r.max}`),
+        h('div.score-mark', String(r.score), h('small', `/${r.max}`)),
         h('div', { style: { flex: 1 } },
-          h('div', h('b', pct === 100 ? '满分！Perfect!' : pct >= 80 ? '很好！Great work.' : pct >= 50 ? '不错 — keep going.' : '加油！Review and try again.')),
+          h('div.verdict', pct === 100 ? '满分！Full marks.' : pct >= 80 ? '很好！Very good.' : pct >= 50 ? '不错。Not bad, keep going.' : '加油！Review the corrections and try a new set.'),
           r.pending ? h('div.small.muted', `Mark yourself on ${r.pending} item${r.pending > 1 ? 's' : ''} below to finish scoring.`) : h('div.small.muted', 'Scroll down to see corrections.'),
           bar(pct, '.jade'),
         ),
@@ -100,10 +100,10 @@ function drill(root, part) {
   newBtn.addEventListener('click', fresh);
 
   root.append(
-    pageHead(`Part ${part.n} · ${part.pts} points`, h('span', h('span.hz', part.zh), ' ', h('span.muted', { style: { fontWeight: 600 } }, `· ${part.en}`)), part.desc, [['Written', '#/written'], [`Part ${part.n}`]]),
+    pageHead(part.zh, `Part ${part.n}: ${part.en}`, `${part.desc} Worth ${part.pts} points.`, [['Written exam', '#/written'], [`Part ${part.n}`]]),
     banner,
     holder,
-    h('div.sticky-actions', h('a.btn.ghost', { href: part.n > 1 ? `#/written/${part.n - 1}` : '#/written' }, '←'), h('span.spacer'), newBtn, checkBtn, h('a.btn.ghost', { href: part.n < 9 ? `#/written/${part.n + 1}` : '#/mock' }, '→')),
+    h('div.sticky-actions', h('a.btn.ghost', { href: part.n > 1 ? `#/written/${part.n - 1}` : '#/written', title: 'Previous part', 'aria-label': 'Previous part' }, '←'), h('span.spacer'), newBtn, checkBtn, h('a.btn.ghost', { href: part.n < 9 ? `#/written/${part.n + 1}` : '#/mock', title: 'Next part', 'aria-label': 'Next part' }, '→')),
   );
   fresh();
 }
@@ -112,7 +112,7 @@ function composition(root, part) {
   const comp = makeComposition({});
   const fb = h('div');
   root.append(
-    pageHead(`Part 9 · ${part.pts} points (+2 bonus)`, h('span', h('span.hz', '作文'), h('span.muted', { style: { fontWeight: 600 } }, ' · Composition')), 'In the exam the topic is given as “Write a composition introducing (____)”. Practise the likely topics: write 100+ words, use as many Hanzi as you can (≥20% earns up to +2), then compare with the model.', [['Written', '#/written'], ['Part 9']]),
+    pageHead('作文', 'Part 9: Composition', 'In the exam the topic is given as “Write a composition introducing (____)”. Practise the likely topics: write 100+ words, use as many Hanzi as you can (≥20% earns up to +2), then compare with the model.', [['Written exam', '#/written'], ['Part 9']]),
     h('div.card', comp.el, fb),
     h('div', { style: { marginTop: '16px' } }, compositionTips()),
     h('div.sticky-actions', h('a.btn.ghost', { href: '#/written/8' }, '←'), h('span.spacer'), h('button.btn.primary', { type: 'button', onclick: (e) => { comp.check(); e.target.disabled = true; } }, 'Finish & self-mark')),

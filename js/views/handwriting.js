@@ -1,5 +1,5 @@
 import { h, speakBtn, zh } from '../util.js';
-import { pageHead, gridSvg } from '../components.js';
+import { pageHead, gridSvg, tz, writerColors } from '../components.js';
 import { VOCAB } from '../../data/vocab.js';
 
 const SIZE = 280;
@@ -49,16 +49,14 @@ export function render(root) {
       status.textContent = 'Handwriting library is still loading (needs internet). Try again in a moment.';
       return;
     }
-    const dark = document.documentElement.dataset.theme === 'dark';
     writer = window.HanziWriter.create(target, x.c, {
       width: SIZE, height: SIZE, padding: 16, showCharacter: false, showOutline: !modeTest,
-      strokeColor: dark ? '#f2ece2' : '#1d1a16', outlineColor: dark ? '#3a332b' : '#e6ded1', drawingColor: dark ? '#ec6a55' : '#c8402f',
-      highlightColor: '#23806a', drawingWidth: 24, strokeAnimationSpeed: 1.2, delayBetweenStrokes: 180,
+      ...writerColors(), drawingWidth: 24, strokeAnimationSpeed: 1.2, delayBetweenStrokes: 180,
       onLoadCharDataError: () => { status.textContent = 'Could not load stroke data (offline?).'; },
     });
     quiz();
     info.replaceChildren(
-      h('div.row', h('span.hz-big', { style: { fontSize: '3rem' } }, x.c), speakBtn(x.c)),
+      h('div.row', tz(x.c, 'lg'), speakBtn(x.c)),
       h('div.small.muted', 'Appears in:'),
       ...x.words.slice(0, 6).map((w) => h('div.ex', { style: { padding: '6px 0' } }, zh(w.h, w.p, w.e, { speak: true }))),
     );
@@ -79,7 +77,7 @@ export function render(root) {
   }
 
   root.append(
-    pageHead('Handwriting · 写汉字', 'Write characters stroke by stroke', 'Part 8 of the exam asks you to WRITE characters by hand, and Hanzi in your composition earns bonus points. Draw on the grid with your finger or mouse — wrong strokes are rejected so you learn correct stroke order.'),
+    pageHead('写汉字', 'Handwriting', 'Part 8 of the exam asks you to WRITE characters by hand, and Hanzi in your composition earns bonus points. Draw on the grid with your finger or mouse — wrong strokes are rejected so you learn correct stroke order.'),
     h('div.grid.g2', { style: { alignItems: 'start' } },
       h('div.card.stack',
         boxHolder,
@@ -88,7 +86,7 @@ export function render(root) {
           h('button.btn.sm', { type: 'button', onclick: () => step(-1) }, '←'),
           h('button.btn.sm', { type: 'button', onclick: () => writer?.animateCharacter({ onComplete: () => quiz() }) }, '▶ Show stroke order'),
           h('button.btn.sm', { type: 'button', onclick: () => { writer?.hideCharacter(); quiz(); } }, '↺ Retry'),
-          h('button.btn.sm.primary', { type: 'button', onclick: () => step(1) }, 'Next →'),
+          h('button.btn.sm.primary', { type: 'button', onclick: () => step(1) }, 'Next character'),
         ),
         h('div.row', { style: { justifyContent: 'center' } }, testBtn),
       ),

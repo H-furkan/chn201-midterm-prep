@@ -1,8 +1,10 @@
 import { h, speakBtn, speak, speakSequence, stopSpeaking } from '../util.js';
-import { pageHead } from '../components.js';
+import { pageHead, tz } from '../components.js';
 import { srsAll, MAX_BOX } from '../srs.js';
 import { VOCAB } from '../../data/vocab.js';
 
+// 田字格 cell size that keeps 4-character words inside a card
+const cellSize = (s) => ([...s].length <= 2 ? 44 : [...s].length === 3 ? 38 : 30);
 const plain = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s']/g, '').toLowerCase();
 
 export function render(root) {
@@ -29,7 +31,7 @@ export function render(root) {
     count.textContent = `${words.length} words`;
     list.replaceChildren(
       ...(words.length
-        ? words.map((w) => h('div.vcard', { onclick: () => speak(w.h), title: 'Click to hear' }, speakBtn(w.h), h('span.vh', { lang: 'zh-CN' }, w.h), h('span.vp', w.p), h('span.ve', w.e), h('span.vpos', w.pos), lvl(w.id, all)))
+        ? words.map((w) => h('div.vcard', { onclick: () => speak(w.h), title: 'Click to hear' }, speakBtn(w.h), tz(w.h, cellSize(w.h)), h('span.vp', w.p), h('span.ve', w.e), h('span.vpos', w.pos), lvl(w.id, all)))
         : [h('div.empty', 'No words match your search.')]),
     );
   }
@@ -44,8 +46,8 @@ export function render(root) {
   }
 
   root.append(
-    pageHead('Vocabulary · 生词', 'Every word for the exam', 'All words from the slides, flashcards, Q&A sheet and sample paper in one list. Click a card to hear it. Press P to hide pinyin and test yourself.'),
-    h('div.toolbar', search, playBtn, h('a.btn.sm.primary', { href: '#/flashcards' }, 'Flashcards →'), h('span.spacer'), count),
+    pageHead('生词', 'Vocabulary', 'All words from the slides, flashcards, Q&A sheet and sample paper in one list. Click a card to hear it. Press P to hide pinyin and test yourself.'),
+    h('div.toolbar', search, playBtn, h('a.btn.sm.primary', { href: '#/flashcards' }, 'Study as flashcards'), h('span.spacer'), count),
     list,
   );
   draw();

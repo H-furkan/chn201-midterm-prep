@@ -8,13 +8,12 @@ export function render(root, { args }) {
   if (id) return detail(root, id);
   const done = store.get('grammarDone', {});
   root.append(
-    pageHead('Grammar · 语法', 'Every grammar point, explained simply', 'Each point has a formula, examples you can listen to, common mistakes, and a mini quiz. These patterns are exactly what parts 2, 3 and 6 of the exam test.'),
-    h('div.row', { style: { marginBottom: '18px' } }, h('a.btn.primary', { href: '#/grammar/quiz' }, '🎯 Mixed grammar quiz')),
+    pageHead('语法', 'Grammar', 'Each point has a pattern, examples you can listen to, common mistakes and a short quiz. Parts 2, 3 and 6 of the exam test these patterns.'),
+    h('div.row', { style: { marginBottom: '18px' } }, h('a.btn.primary', { href: '#/grammar/quiz' }, 'Take the mixed quiz')),
     h('div.gp-list', GRAMMAR.map((g) =>
       h('a.gp-item', { href: `#/grammar/${g.id}` },
-        h('span', { style: { fontSize: '1.2rem' } }, done[g.id] ? '✅' : '📘'),
-        h('div', { style: { flex: 1, minWidth: 0 } }, h('div.gt.hz', g.title), h('div.gf', g.pattern.split('\n')[0])),
-        h('span.muted', '→'),
+        h(`span.gs${done[g.id] ? '.done' : ''}`, { title: done[g.id] ? 'Quiz passed' : 'Not passed yet' }),
+        h('div', { style: { flex: 1, minWidth: 0 } }, h('div.gt', g.title), h('div.gf', g.pattern.split('\n')[0])),
       ),
     )),
   );
@@ -52,7 +51,7 @@ function detail(root, id) {
   const next = GRAMMAR[idx + 1];
   const quiz = quizBlock(g.quiz, (r, n) => { if (r === n) store.update('grammarDone', {}, (d) => ({ ...d, [g.id]: true })); });
   root.append(
-    pageHead('Grammar · 语法', h('span.hz', g.title), null, [['Grammar', '#/grammar'], [g.title]]),
+    pageHead(null, g.title, null, [['Grammar', '#/grammar'], [g.title]]),
     h('div.formula', g.pattern),
     h('div.card', { style: { marginTop: '16px' } }, h('p', { style: { margin: 0 } }, g.explain)),
     h('div.grid.g2', { style: { marginTop: '16px', alignItems: 'start' } },
@@ -64,7 +63,7 @@ function detail(root, id) {
     ),
     h('div.row.between', { style: { marginTop: '18px' } },
       prev ? h('a.btn', { href: `#/grammar/${prev.id}` }, '← ', h('span.hz', prev.title.slice(0, 18))) : h('span'),
-      next ? h('a.btn.primary', { href: `#/grammar/${next.id}` }, h('span.hz', next.title.slice(0, 18)), ' →') : h('a.btn.primary', { href: '#/grammar/quiz' }, 'Mixed quiz →'),
+      next ? h('a.btn.primary', { href: `#/grammar/${next.id}` }, h('span.hz', next.title.slice(0, 18)), ' →') : h('a.btn.primary', { href: '#/grammar/quiz' }, 'Take the mixed quiz'),
     ),
   );
 }
@@ -74,8 +73,8 @@ function quizAll(root) {
   const res = h('div');
   const quiz = quizBlock(qs, (r, n) => res.replaceChildren(feedback(r / n >= 0.8 ? 'good' : 'info', h('b', `Final: ${r}/${n}. `), r / n >= 0.8 ? '很好！' : 'Review the points you missed, then try again.')));
   root.append(
-    pageHead('Grammar · 语法', 'Mixed grammar quiz', '20 random questions from all grammar points. Instant feedback with explanations.', [['Grammar', '#/grammar'], ['Mixed quiz']]),
+    pageHead(null, 'Mixed grammar quiz', '20 random questions from all grammar points, with an explanation after each answer.', [['Grammar', '#/grammar'], ['Mixed quiz']]),
     h('div.card', h('div.row.between', h('span'), quiz.score), quiz.wrap, res),
-    h('div.row', { style: { marginTop: '16px' } }, h('button.btn.primary', { type: 'button', onclick: () => { root.replaceChildren(); quizAll(root); } }, '↻ New quiz')),
+    h('div.row', { style: { marginTop: '16px' } }, h('button.btn.primary', { type: 'button', onclick: () => { root.replaceChildren(); quizAll(root); } }, 'New quiz')),
   );
 }

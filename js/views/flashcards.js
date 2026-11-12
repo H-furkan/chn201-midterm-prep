@@ -1,13 +1,16 @@
 import { h, speak, speakBtn, shuffle, store } from '../util.js';
-import { pageHead, bar } from '../components.js';
+import { pageHead, bar, tz } from '../components.js';
 import { grade, queue, mastery, nextDueIn } from '../srs.js';
 import { VOCAB } from '../../data/vocab.js';
 
+// Big 田字格 cells that still fit four characters on a phone
+const frontSize = (s) => ([...s].length <= 2 ? 96 : [...s].length === 3 ? 84 : 68);
+
 const MODES = {
-  hanzi: { label: '汉字 → meaning', front: (w) => [h('div.big', { lang: 'zh-CN' }, w.h)] },
+  hanzi: { label: '汉字 → meaning', front: (w) => [tz(w.h, frontSize(w.h))] },
   english: { label: 'English → 汉字', front: (w) => [h('div.big.en', w.e)] },
   pinyin: { label: 'Pinyin → 汉字', front: (w) => [h('div.big.py', w.p)] },
-  listen: { label: 'Listen → meaning', front: () => [h('div.big', '🎧'), h('div.en', 'Listen, then flip')] },
+  listen: { label: 'Listen → meaning', front: () => [h('div.big.ear', '🎧'), h('div.en', 'Listen, then flip')] },
 };
 
 export function render(root) {
@@ -29,7 +32,7 @@ export function render(root) {
     i = 0;
     stats = { again: 0, ok: 0 };
     const m = mastery(ws);
-    summary.textContent = `${m.known} mastered · ${m.learning} learning · ${m.fresh} new`;
+    summary.textContent = `${m.known} known, ${m.learning} learning, ${m.fresh} new`;
     draw();
   }
 
@@ -47,7 +50,7 @@ export function render(root) {
     }
     const w = deck[i];
     const back = [
-      h('div.big', { lang: 'zh-CN', style: { fontSize: '4rem' } }, w.h),
+      tz(w.h, 52),
       h('div.pin', w.p),
       h('div.en', w.e),
       h('div.small.muted', w.pos),
@@ -99,7 +102,7 @@ export function render(root) {
   document.addEventListener('keydown', onKey);
 
   root.append(
-    pageHead('Flashcards · 卡片', 'Spaced-repetition flashcards', 'Cards you miss come back quickly; cards you know wait longer. 20 cards per session — do a few sessions a day this week.'),
+    pageHead('卡片', 'Flashcards', 'Cards you miss come back soon; cards you know wait longer. Each session is 20 cards.'),
     h('div.toolbar', modeSel, h('span.spacer'), summary),
     h('div.fc-wrap', progress, stage),
   );

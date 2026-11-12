@@ -1,5 +1,5 @@
 import { h, store, fmtTime, logResult, toast } from '../util.js';
-import { pageHead, bar } from '../components.js';
+import { pageHead, bar, tz, paperIndex } from '../components.js';
 import { PARTS, BUILDERS } from '../drills.js';
 import { makeComposition } from '../compose.js';
 import { COMPOSITION } from '../../data/composition.js';
@@ -12,20 +12,20 @@ export function render(root) {
   const history = store.get('mocks', []);
   const start = h('button.btn.primary.lg', { type: 'button', onclick: () => exam(root) }, 'Start mock exam');
   root.append(
-    pageHead('Mock exam · 模拟考试', 'Full written midterm, 100 points', 'A fresh paper every time, built in the exact format of the sample: nine parts, 120 minutes. Parts 1–5 and 8 are marked automatically; for parts 6, 7 and 9 you compare with model answers and mark yourself honestly.'),
+    pageHead('模拟考试', 'Mock exam', 'A new paper every time, in the format of the sample: nine parts, 120 minutes. Parts 1–5 and 8 are marked for you. For parts 6, 7 and 9 you compare with the model answers and mark yourself.'),
     h('div.grid.g2',
       h('div.card',
-        h('h3', 'Paper structure'),
-        h('table.format-table', h('tbody', PARTS.map((p) => h('tr', h('td.num', CN_NUM[p.n - 1]), h('td', h('span.hz', p.zh), h('div.small.muted', p.en)), h('td.pts', `${p.pts}`))))),
+        h('h3', 'The paper'),
+        paperIndex(PARTS.map((p) => ({ n: CN_NUM[p.n - 1], zh: p.zh, en: p.en, pts: `${p.pts}` }))),
       ),
       h('div.stack',
         h('div.card', h('h3', 'Before you start'), h('ul.small', { style: { paddingLeft: '18px' } },
-          h('li', 'Turn pinyin OFF (press P) — the real paper only gives pinyin in some parts.'),
+          h('li', 'Turn pinyin off (press P). The real paper only gives pinyin in some parts.'),
           h('li', 'No dictionary, no phone. Write answers in Hanzi where you can.'),
-          h('li', 'The timer is a guide: the real exam is 120 minutes.'),
+          h('li', 'The timer runs for 120 minutes, like the real exam.'),
         ), start),
         history.length
-          ? h('div.card', h('h3', 'Your previous mocks'), history.slice(-6).reverse().map((m) => h('div', { style: { margin: '8px 0' } }, h('div.row.between.small', h('span', new Date(m.t).toLocaleString()), h('b', `${m.score}/100${m.bonus ? ` (+${m.bonus})` : ''}`)), bar(m.score, '.jade'))))
+          ? h('div.card', h('h3', 'Your last scores'), history.slice(-6).reverse().map((m) => h('div', { style: { margin: '8px 0' } }, h('div.row.between.small', h('span', new Date(m.t).toLocaleString()), h('b', `${m.score}/100${m.bonus ? ` (+${m.bonus})` : ''}`)), bar(m.score, '.jade'))))
           : null,
       ),
     ),
@@ -79,8 +79,8 @@ function exam(root) {
     const t = totals();
     resultBox.replaceChildren(
       h('div.card', { style: { marginBottom: '18px' } },
-        h('div.score-banner', { style: { boxShadow: 'none', border: 0, padding: 0 } },
-          h('div.big', `${t.score}/100`),
+        h('div.score-banner', { style: { border: 0, padding: 0 } },
+          h('div.score-mark', String(t.score), h('small', '/100')),
           h('div', { style: { flex: 1 } },
             t.bonus ? h('div', h('b', `+${t.bonus} Hanzi bonus`)) : null,
             t.pending ? h('div.small', `⚠︎ ${t.pending} self-marked item${t.pending > 1 ? 's' : ''} still unmarked (parts 6, 7, 8, 9). Scroll down and mark them.`) : h('div.small.muted', 'All parts marked.'),
@@ -115,11 +115,11 @@ function exam(root) {
 
   root.replaceChildren(
     h('div.row.between', { style: { marginBottom: '6px' } }, h('div.crumbs', h('a', { href: '#/mock' }, 'Mock exam'), ' / Paper'), timer),
-    h('div.card.center', h('div.small.muted', 'CHN201 Midterm · Mock paper'), h('h1', { style: { margin: '6px 0' } }, h('span.hz-big', '期中考试'), ' · Midterm Exam'), h('div.small.muted', 'Duration 120 minutes · Total 100 points · No dictionaries or devices')),
+    h('div.card.paper-head', tz('期中考试', 'md'), h('h1', { style: { margin: '0 0 4px' } }, 'CHN201 midterm, practice paper'), h('div.small.muted', '120 minutes, 100 points. No dictionaries or phones.')),
     resultBox,
     ...parts.map(({ p, built }) =>
       h('section.mock-part',
-        h('h2', h('span.hz-big', { style: { color: 'var(--accent)' } }, `${CN_NUM[p.n - 1]}、`), h('span.hz', p.zh), h('span.small.muted', { style: { fontWeight: 500 } }, ` ${p.en}`), h('span.pts', `${p.pts} pts`)),
+        h('h2', h('span.hz', { style: { color: 'var(--red)' } }, `${CN_NUM[p.n - 1]}、`), h('span.hz', p.zh), h('span.small.muted', { style: { fontWeight: 500 } }, p.en), h('span.pts', `${p.pts} points`)),
         h('p.small.muted', p.desc),
         h('div.card', built.el),
       ),
