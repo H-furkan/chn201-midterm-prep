@@ -63,7 +63,7 @@ export const store = {
 };
 
 export function settings() {
-  return { theme: 'auto', pinyin: true, speed: 1, voice: 'natural', examDate: '', ...store.get('settings', {}) };
+  return { theme: 'auto', pinyin: true, speed: 1, voice: 'natural', ...store.get('settings', {}) };
 }
 export function saveSettings(patch) {
   const s = { ...settings(), ...patch };
@@ -248,51 +248,6 @@ export function toast(msg) {
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-// ---------- pinyin ----------
-const TONES = {
-  a: 'āáǎàa', e: 'ēéěèe', i: 'īíǐìi', o: 'ōóǒòo', u: 'ūúǔùu', ü: 'ǖǘǚǜü',
-};
-const MARKED = {};
-for (const [base, row] of Object.entries(TONES)) {
-  for (let t = 0; t < 4; t++) MARKED[row[t]] = [base, t + 1];
-}
-
-/** Return the pinyin with the tone of syllable-vowel #idx changed to `tone` (1-4, 5 = neutral). */
-function retone(p, idx, tone) {
-  let n = -1;
-  return [...p]
-    .map((ch) => {
-      const m = MARKED[ch.toLowerCase()];
-      if (!m) return ch;
-      n++;
-      if (n !== idx) return ch;
-      const out = TONES[m[0]][tone - 1];
-      return ch === ch.toUpperCase() && ch !== ch.toLowerCase() ? out.toUpperCase() : out;
-    })
-    .join('');
-}
-
-/** Plausible wrong pinyin: same syllables, different tones. */
-export function toneVariants(p, n = 3) {
-  const marks = [...p].filter((ch) => MARKED[ch.toLowerCase()]);
-  const out = new Set();
-  let guard = 0;
-  while (out.size < n && guard++ < 60 && marks.length) {
-    let v = p;
-    const changes = 1 + (marks.length > 1 && Math.random() < 0.5 ? 1 : 0);
-    for (let c = 0; c < changes; c++) {
-      const idx = Math.floor(Math.random() * marks.length);
-      const cur = MARKED[[...v].filter((ch) => MARKED[ch.toLowerCase()])[idx]?.toLowerCase()]?.[1];
-      let t;
-      do t = 1 + Math.floor(Math.random() * 4);
-      while (t === cur);
-      v = retone(v, idx, t);
-    }
-    if (v !== p) out.add(v);
-  }
-  return [...out];
 }
 
 /** Count syllables in a pinyin/hanzi mixed text (composition "word" count). */

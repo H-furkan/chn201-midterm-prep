@@ -259,8 +259,6 @@ textarea.input { min-height: 110px; resize: vertical; font-family: var(--font-zh
 }
 .hero .btn { background: #fff; color: #7a2216; border-color: #fff; }
 .hero .btn.outline { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .5); }
-.countdown { display: inline-flex; align-items: baseline; gap: 8px; padding: 8px 14px; border-radius: 12px; background: rgba(0, 0, 0, .18); margin-top: 6px; }
-.countdown b { font-size: 1.6rem; }
 .format-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 .format-table td { padding: 9px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .format-table tr:last-child td { border-bottom: 0; }

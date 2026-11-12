@@ -1,13 +1,9 @@
-import { h, settings, saveSettings } from '../util.js';
+import { h } from '../util.js';
 import { PARTS } from '../drills.js';
 
 const CN_NUM = '一二三四五六七八九';
 
 export function render(root) {
-  const s = settings();
-  const days = s.examDate ? Math.ceil((new Date(s.examDate + 'T00:00') - new Date(new Date().toDateString())) / 86400000) : null;
-  const dateInput = h('input.input', { type: 'date', value: s.examDate, 'aria-label': 'Exam date', style: { width: 'auto', background: 'rgba(255,255,255,.95)', color: '#1d1a16', padding: '6px 10px' }, onchange: (e) => { saveSettings({ examDate: e.target.value }); root.replaceChildren(); render(root); } });
-
   root.append(
     h('section.hero',
       h('div.bigchar', { 'aria-hidden': 'true' }, '考'),
@@ -18,12 +14,6 @@ export function render(root) {
           h('a.btn', { href: '#/flashcards' }, 'Study words'),
           h('a.btn.outline', { href: '#/mock' }, 'Take a mock exam'),
           h('a.btn.outline', { href: '#/oral/2' }, 'Oral Q&A'),
-        ),
-        h('div.row', { style: { marginTop: '16px', alignItems: 'center' } },
-          days != null
-            ? h('div.countdown', h('b', days > 0 ? String(days) : days === 0 ? '今天!' : '✓'), h('span', days > 0 ? `day${days > 1 ? 's' : ''} until your exam` : days === 0 ? 'Exam day — 加油!' : 'Exam date passed'))
-            : h('span.small', { style: { opacity: 0.9 } }, 'Exam date (for a countdown):'),
-          dateInput,
         ),
       ),
     ),

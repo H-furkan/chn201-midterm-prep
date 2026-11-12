@@ -1,13 +1,13 @@
 // Builders for the nine written-exam parts. Each builder returns
 // { el, check(), result() -> { score, max, pending } } so the same parts power
 // the per-part drills and the full mock exam.
-import { h, shuffle, sample, LETTERS, norm, hasHanzi, toneVariants, speakBtn, zh } from './util.js';
+import { h, shuffle, sample, LETTERS, norm, hasHanzi, speakBtn, zh } from './util.js';
 import { feedback, selfGrade, writePad } from './components.js';
 import { VOCAB } from '../data/vocab.js';
 import { FILL, REORDER, MATCH, READING, ANSWER, PICTURE, CHARS } from '../data/written.js';
 
 export const PARTS = [
-  { n: 1, zh: '看词语，选拼音', en: 'Hanzi → pinyin', desc: 'Pick the correct pinyin (tones count!).', pts: 10, each: 1, count: 10 },
+  { n: 1, zh: '看词语，选拼音', en: 'Hanzi → pinyin', desc: 'Match each word with its pinyin (A–J), like the real paper.', pts: 10, each: 1, count: 10 },
   { n: 2, zh: '选词填空', en: 'Fill in the blanks', desc: 'Choose words from the bank (A–K) to complete each sentence.', pts: 10, each: 1, count: 10 },
   { n: 3, zh: '排词成句', en: 'Build the sentence', desc: 'Put the pieces in the right order. Answer in Hanzi.', pts: 20, each: 2, count: 10 },
   { n: 4, zh: '匹配', en: 'Match Q & A', desc: 'Match each question with its answer.', pts: 10, each: 1, count: 10 },
@@ -25,44 +25,42 @@ function qRow(i, ...body) {
 }
 
 // ---------------------------------------------------------------- Part 1
+// As on the sample paper: a list of Hanzi words and one shared list of pinyin (A–J) to match.
+// Every pinyin in the list is the answer to exactly one word, so no option gives itself away.
 export function genPart1(n = 10) {
-  const pool = VOCAB.filter((w) => /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/.test(w.p));
-  const uniq = [];
-  const seen = new Set();
-  for (const w of shuffle(pool)) {
-    if (seen.has(w.h)) continue;
-    seen.add(w.h);
-    uniq.push(w);
-    if (uniq.length === n) break;
+  const items = [];
+  const seenH = new Set();
+  const seenP = new Set();
+  for (const w of shuffle(VOCAB.filter((x) => /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/.test(x.p)))) {
+    const p = w.p.toLowerCase();
+    if (seenH.has(w.h) || seenP.has(p)) continue; // e.g. 他/她 are both tā: never in the same set
+    seenH.add(w.h);
+    seenP.add(p);
+    items.push(w);
+    if (items.length === n) break;
   }
-  return uniq.map((w) => {
-    const syl = w.p.split(/\s+/).length;
-    const tones = toneVariants(w.p, 2);
-    const others = shuffle(VOCAB.filter((x) => x.p !== w.p && x.p.split(/\s+/).length === syl && !tones.includes(x.p))).slice(0, 3 - tones.length);
-    const options = shuffle([w.p, ...tones, ...others.map((o) => o.p)].slice(0, 4));
-    return { w, options, answer: options.indexOf(w.p) };
-  });
+  return { items, options: shuffle(items.map((w) => w.p)) };
 }
 
-export function makePart1(items, { onChange } = {}) {
-  const picks = items.map(() => null);
-  const rows = items.map((it, i) => {
-    const btns = it.options.map((o, j) =>
-      h('button.opt', { type: 'button', onclick: () => { picks[i] = j; btns.forEach((b, k) => b.classList.toggle('sel', k === j)); onChange?.(); } }, h('span.ol', LETTERS[j]), o),
-    );
+export function makePart1({ items, options }, { onChange } = {}) {
+  const bank = h('div.bank', options.map((p, i) => h('span.tok', { style: { fontFamily: 'var(--font-ui)' } }, h('span.tl', LETTERS[i]), p)));
+  const rows = items.map((w, i) => {
+    const sel = h('select.blank-select', { 'aria-label': `Pinyin for ${w.h}`, onchange: () => onChange?.() }, h('option', { value: '' }, '（ ）'), options.map((p, j) => h('option', { value: p }, LETTERS[j])));
     const fb = h('div');
-    const row = qRow(i, h('div.row', h('span.hz-big', { lang: 'zh-CN', style: { fontSize: '2rem' } }, it.w.h)), h('div.opts.cols', btns), fb);
-    return { row, btns, fb };
+    const row = qRow(i, h('div.row', h('span.hz-big', { lang: 'zh-CN', style: { fontSize: '2rem', minWidth: '4.5em' } }, w.h), sel), fb);
+    return { row, sel, fb, w };
   });
   return {
-    el: h('div', rows.map((r) => r.row)),
+    el: h('div', h('p.small.muted', 'Pinyin:'), bank, rows.map((r) => r.row)),
     check() {
-      rows.forEach((r, i) => {
-        r.btns.forEach((b, k) => { b.disabled = true; b.classList.toggle('correct', k === items[i].answer); b.classList.toggle('wrong', k === picks[i] && k !== items[i].answer); });
-        r.fb.replaceChildren(h('div.row.small', { style: { marginTop: '8px' } }, speakBtn(items[i].w.h), h('span', h('b.hz', items[i].w.h), ` ${items[i].w.p} — ${items[i].w.e}`)));
-      });
+      for (const r of rows) {
+        const ok = r.sel.value === r.w.p;
+        r.sel.disabled = true;
+        r.sel.classList.add(ok ? 'correct' : 'wrong');
+        r.fb.replaceChildren(h('div.row.small', { style: { marginTop: '8px' } }, speakBtn(r.w.h), h('span', ok ? '✓ ' : `✗ ${LETTERS[options.indexOf(r.w.p)]} · `, h('b', r.w.p), ` — ${r.w.e}`)));
+      }
     },
-    result: () => ({ score: items.filter((it, i) => picks[i] === it.answer).length, max: items.length }),
+    result: () => ({ score: rows.filter((r) => r.sel.value === r.w.p).length, max: rows.length }),
   };
 }
 
